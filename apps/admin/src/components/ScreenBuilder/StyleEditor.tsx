@@ -356,7 +356,7 @@ export function StyleEditor() {
                 <Separator className="mb-3" />
                 <h4 className={sectionTitle}>Add Child</h4>
                 <div className="grid grid-cols-3 gap-1">
-                  {(['text', 'button', 'image', 'input', 'checkbox', 'icon', 'card'] as ScreenComponentType[]).map(
+                  {(['text', 'button', 'image', 'input', 'checkbox', 'icon', 'card', 'chip', 'badge'] as ScreenComponentType[]).map(
                     (t) => (
                       <Button
                         key={t}

@@ -77,6 +77,10 @@ export const ScreenComponentType = z.enum([
   'badge',
   'list',
   'checkbox',
+  'rating_stars',
+  'price_tag',
+  'map_view',
+  'chip',
 ]);
 export type ScreenComponentType = z.infer<typeof ScreenComponentType>;
 
@@ -158,6 +162,10 @@ export const COMPONENT_DEFAULTS: Record<ScreenComponentType, { props: Record<str
   badge: { props: { text: 'New', color: '#6366f1' }, label: 'Badge', icon: '\u{1F3F7}' },
   list: { props: { direction: 'vertical', gap: 8 }, label: 'List', icon: '\u{1F4CB}' },
   checkbox: { props: { label: 'Checkbox', checked: false }, label: 'Checkbox', icon: '\u{2611}' },
+  rating_stars: { props: { value: 4.5, max: 5 }, label: 'Rating', icon: '\u{2B50}' },
+  price_tag: { props: { amount: 99, currency: '$', period: '/night' }, label: 'Price Tag', icon: '\u{1F4B0}' },
+  map_view: { props: { lat: 0, lng: 0, zoom: 12, height: 200 }, label: 'Map View', icon: '\u{1F5FA}' },
+  chip: { props: { label: 'Tag', variant: 'outline' }, label: 'Chip', icon: '\u{1F3F7}' },
 };
 
 // ─── Screen Definition (per node) ────────────────────────────────────────────

@@ -17,7 +17,9 @@ import {
   List,
   Images,
   CircleUser,
-  Tag,
+  Tag as TagIcon,
+  DollarSign,
+  MapPin,
   Video,
   CheckSquare,
 } from 'lucide-react';
@@ -42,15 +44,19 @@ const COMPONENT_ICONS: Record<string, LucideIcon> = {
   list: List,
   gallery: Images,
   avatar: CircleUser,
-  badge: Tag,
+  badge: TagIcon,
   video: Video,
   checkbox: CheckSquare,
+  rating_stars: Star,
+  price_tag: DollarSign,
+  map_view: MapPin,
+  chip: TagIcon,
 };
 
 const CATEGORIES: { label: string; types: ScreenComponentType[] }[] = [
   {
     label: 'Basic',
-    types: ['text', 'button', 'image', 'icon', 'spacer', 'divider'],
+    types: ['text', 'button', 'image', 'icon', 'spacer', 'divider', 'chip'],
   },
   {
     label: 'Input',
@@ -62,7 +68,7 @@ const CATEGORIES: { label: string; types: ScreenComponentType[] }[] = [
   },
   {
     label: 'Data',
-    types: ['list', 'gallery', 'avatar', 'badge', 'video'],
+    types: ['list', 'gallery', 'avatar', 'badge', 'video', 'rating_stars', 'price_tag', 'map_view'],
   },
 ];
 

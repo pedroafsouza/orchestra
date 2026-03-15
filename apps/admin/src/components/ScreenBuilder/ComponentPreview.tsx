@@ -412,6 +412,74 @@ function renderComponentContent(
         </div>
       );
 
+    case 'rating_stars': {
+      const val = props.value || 0;
+      const max = props.max || 5;
+      return (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 2, ...resolveStyle(component, breakpoint) }}>
+          {Array.from({ length: max }, (_, i) => (
+            <span key={i} style={{ color: i < Math.floor(val) ? '#f59e0b' : '#334155', fontSize: 16 }}>
+              {i < val ? '\u2605' : '\u2606'}
+            </span>
+          ))}
+          <span style={{ color: '#94a3b8', fontSize: 12, marginLeft: 4 }}>{val}</span>
+        </div>
+      );
+    }
+
+    case 'price_tag':
+      return (
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 2, ...resolveStyle(component, breakpoint) }}>
+          <span style={{ fontSize: 22, fontWeight: 700, color: '#f8fafc' }}>
+            {props.currency || '$'}{props.amount ?? 0}
+          </span>
+          <span style={{ fontSize: 13, color: '#94a3b8' }}>{props.period || '/night'}</span>
+        </div>
+      );
+
+    case 'map_view':
+      return (
+        <div
+          style={{
+            width: '100%',
+            height: props.height || 200,
+            backgroundColor: '#1a2332',
+            borderRadius: 12,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#475569',
+            fontSize: 12,
+            position: 'relative',
+            overflow: 'hidden',
+            ...resolveStyle(component, breakpoint),
+          }}
+        >
+          <div style={{ position: 'absolute', inset: 0, opacity: 0.15, background: 'repeating-linear-gradient(0deg, transparent, transparent 20px, #334155 20px, #334155 21px), repeating-linear-gradient(90deg, transparent, transparent 20px, #334155 20px, #334155 21px)' }} />
+          <span style={{ zIndex: 1 }}>{'\u{1F4CD}'} Map View</span>
+        </div>
+      );
+
+    case 'chip':
+      return (
+        <span
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            padding: '4px 12px',
+            borderRadius: 999,
+            fontSize: 12,
+            fontWeight: 500,
+            border: '1px solid #334155',
+            color: '#e2e8f0',
+            backgroundColor: props.variant === 'filled' ? '#334155' : 'transparent',
+            ...resolveStyle(component, breakpoint),
+          }}
+        >
+          {props.label || 'Chip'}
+        </span>
+      );
+
     default:
       return (
         <div style={{ padding: 8, color: '#64748b', fontSize: 12 }}>

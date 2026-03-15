@@ -16,7 +16,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Plus, FolderKanban, Users, Trash2, ClipboardList } from 'lucide-react';
+import { Plus, FolderKanban, Users, Trash2, ClipboardList, Home } from 'lucide-react';
 
 interface TemplateSummary {
   id: string;
@@ -52,6 +52,13 @@ function TemplateIllustration({ templateId }: { templateId: string }) {
     return (
       <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-md shadow-indigo-500/20">
         <ClipboardList className="w-6 h-6 text-white" />
+      </div>
+    );
+  }
+  if (templateId === 'bnb') {
+    return (
+      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-rose-500 to-orange-600 flex items-center justify-center shadow-md shadow-rose-500/20">
+        <Home className="w-6 h-6 text-white" />
       </div>
     );
   }

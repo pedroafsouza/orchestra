@@ -4,6 +4,7 @@ import { ProjectsPage } from '@/pages/ProjectsPage';
 import { ProjectDashboardPage } from '@/pages/ProjectDashboardPage';
 import { FlowEditorPage } from '@/pages/FlowEditorPage';
 import { DatasourcesPage } from '@/pages/DatasourcesPage';
+import { SettingsPage } from '@/pages/SettingsPage';
 import { useThemeStore } from '@/store/themeStore';
 import { Toaster } from '@/components/ui/toaster';
 
@@ -29,6 +30,7 @@ export default function App() {
           <Route path="/project/:projectId" element={<ProjectDashboardPage />} />
           <Route path="/project/:projectId/flow" element={<FlowEditorPage />} />
           <Route path="/project/:projectId/datasources" element={<DatasourcesPage />} />
+          <Route path="/project/:projectId/settings" element={<SettingsPage />} />
         </Routes>
       </BrowserRouter>
       <Toaster />

@@ -14,36 +14,42 @@ import type { OrchestraNodeData } from '@/store/flowStore';
 import { useFlowStore } from '@/store/flowStore';
 import type { ScreenComponent } from '@orchestra/shared';
 
-const NODE_STYLES: Record<string, { accent: string; iconBg: string; icon: LucideIcon }> = {
+const NODE_STYLES: Record<string, { accent: string; iconBg: string; icon: LucideIcon; color: string }> = {
   landing: {
     accent: 'bg-indigo-500',
     iconBg: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400',
     icon: Home,
+    color: '#6366f1',
   },
   list: {
     accent: 'bg-emerald-500',
     iconBg: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400',
     icon: List,
+    color: '#10b981',
   },
   form: {
     accent: 'bg-amber-500',
     iconBg: 'bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400',
     icon: FileText,
+    color: '#f59e0b',
   },
   map: {
     accent: 'bg-sky-500',
     iconBg: 'bg-sky-100 text-sky-600 dark:bg-sky-500/20 dark:text-sky-400',
     icon: Map,
+    color: '#0ea5e9',
   },
   photo_gallery: {
     accent: 'bg-rose-500',
     iconBg: 'bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400',
     icon: Images,
+    color: '#f43f5e',
   },
   decision: {
     accent: 'bg-violet-500',
     iconBg: 'bg-violet-100 text-violet-600 dark:bg-violet-500/20 dark:text-violet-400',
     icon: GitBranch,
+    color: '#8b5cf6',
   },
 };
 
@@ -51,7 +57,13 @@ const DEFAULT_STYLE = {
   accent: 'bg-gray-500',
   iconBg: 'bg-gray-100 text-gray-600 dark:bg-gray-500/20 dark:text-gray-400',
   icon: Box,
+  color: '#6b7280',
 };
+
+/** Get the accent color for a node type — used by MiniMap */
+export function getNodeColor(nodeType: string): string {
+  return (NODE_STYLES[nodeType] || DEFAULT_STYLE).color;
+}
 
 /** Extract button labels with navigateTo from screen definition */
 function getButtonLinks(nodeData: OrchestraNodeData): string[] {

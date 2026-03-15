@@ -1,15 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   ReactFlow,
   Background,
   Controls,
   MiniMap,
   BackgroundVariant,
+  MarkerType,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { useFlowStore } from '@/store/flowStore';
 import { useThemeStore } from '@/store/themeStore';
-import { OrchestraNode } from '@/components/OrchestraNode';
+import { OrchestraNode, getNodeColor } from '@/components/OrchestraNode';
 import { Sidebar } from '@/components/Sidebar';
 import { Toolbar } from '@/components/Toolbar';
 import { ScreenBuilderModal } from '@/components/ScreenBuilder/ScreenBuilderModal';
@@ -44,6 +45,46 @@ export function FlowEditorPage() {
 
   const isDark = theme === 'dark';
 
+  const edgeColor = isDark ? 'hsl(215 20% 45%)' : 'hsl(215 16% 70%)';
+
+  const defaultEdgeOptions = useMemo(() => ({
+    type: 'smoothstep',
+    animated: false,
+    style: {
+      stroke: edgeColor,
+      strokeWidth: 1.5,
+      strokeDasharray: '6 4',
+    },
+    markerEnd: {
+      type: MarkerType.ArrowClosed,
+      color: edgeColor,
+      width: 16,
+      height: 16,
+    },
+  }), [edgeColor]);
+
+  // Ensure existing edges have markers (for edges loaded from DB)
+  const styledEdges = useMemo(() =>
+    edges.map((e) => ({
+      ...e,
+      type: e.type || 'smoothstep',
+      animated: false,
+      style: {
+        stroke: edgeColor,
+        strokeWidth: 1.5,
+        strokeDasharray: '6 4',
+        ...((e as any).style || {}),
+      },
+      markerEnd: (e as any).markerEnd || {
+        type: MarkerType.ArrowClosed,
+        color: edgeColor,
+        width: 16,
+        height: 16,
+      },
+    })),
+    [edges, edgeColor]
+  );
+
   return (
     <div className="h-screen flex flex-col bg-secondary">
       <Toolbar
@@ -54,11 +95,12 @@ export function FlowEditorPage() {
         <div className="flex-1">
           <ReactFlow
             nodes={nodes}
-            edges={edges}
+            edges={styledEdges}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
             nodeTypes={nodeTypes}
+            defaultEdgeOptions={defaultEdgeOptions}
             onPaneClick={() => setSelectedNode(null)}
             onNodeDoubleClick={handleNodeDoubleClick}
             fitView
@@ -72,7 +114,10 @@ export function FlowEditorPage() {
             <Controls />
             <MiniMap
               className={isDark ? '!bg-card' : '!bg-card'}
-              nodeColor="hsl(var(--primary))"
+              nodeColor={(node) => {
+                const data = node.data as any;
+                return getNodeColor(data?.nodeType || '');
+              }}
               maskColor={isDark ? 'rgba(0, 0, 0, 0.4)' : 'rgba(0, 0, 0, 0.08)'}
             />
           </ReactFlow>

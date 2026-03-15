@@ -5,6 +5,7 @@ import { ProjectDashboardPage } from '@/pages/ProjectDashboardPage';
 import { FlowEditorPage } from '@/pages/FlowEditorPage';
 import { DatasourcesPage } from '@/pages/DatasourcesPage';
 import { useThemeStore } from '@/store/themeStore';
+import { Toaster } from '@/components/ui/toaster';
 
 export default function App() {
   const theme = useThemeStore((s) => s.theme);
@@ -21,13 +22,16 @@ export default function App() {
   }, [theme]);
 
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<ProjectsPage />} />
-        <Route path="/project/:projectId" element={<ProjectDashboardPage />} />
-        <Route path="/project/:projectId/flow" element={<FlowEditorPage />} />
-        <Route path="/project/:projectId/datasources" element={<DatasourcesPage />} />
-      </Routes>
-    </BrowserRouter>
+    <>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<ProjectsPage />} />
+          <Route path="/project/:projectId" element={<ProjectDashboardPage />} />
+          <Route path="/project/:projectId/flow" element={<FlowEditorPage />} />
+          <Route path="/project/:projectId/datasources" element={<DatasourcesPage />} />
+        </Routes>
+      </BrowserRouter>
+      <Toaster />
+    </>
   );
 }

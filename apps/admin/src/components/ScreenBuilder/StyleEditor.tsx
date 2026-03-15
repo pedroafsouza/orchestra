@@ -164,8 +164,8 @@ export function StyleEditor() {
   const sectionTitle = 'text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2';
 
   return (
-    <ScrollArea className="w-64 border-l border bg-card">
-      <div className="p-3">
+    <ScrollArea className="w-56 border-l border bg-card">
+      <div className="p-2.5">
         {/* Screen background */}
         <div className="mb-4 pb-3">
           <h3 className={sectionTitle}>Screen</h3>

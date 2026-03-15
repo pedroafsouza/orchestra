@@ -70,17 +70,17 @@ export function ComponentPalette() {
   const addComponent = useScreenStore((s) => s.addComponent);
 
   return (
-    <ScrollArea className="w-56 border-r bg-card border-border">
-      <div className="p-3">
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+    <ScrollArea className="w-44 border-r bg-card border-border">
+      <div className="p-2">
+        <h3 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
           Components
         </h3>
         {CATEGORIES.map((cat) => (
-          <div key={cat.label} className="mb-4">
-            <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1.5">
+          <div key={cat.label} className="mb-3">
+            <p className="text-[9px] uppercase tracking-widest text-muted-foreground mb-1">
               {cat.label}
             </p>
-            <div className="grid grid-cols-2 gap-1.5">
+            <div className="grid grid-cols-2 gap-1">
               {cat.types.map((type) => {
                 const def = COMPONENT_DEFAULTS[type];
                 const Icon = COMPONENT_ICONS[type];
@@ -89,12 +89,12 @@ export function ComponentPalette() {
                     key={type}
                     variant="secondary"
                     size="sm"
-                    className="flex flex-col items-center gap-1 h-auto px-2 py-2.5"
+                    className="flex flex-col items-center gap-0.5 h-auto px-1 py-1.5 text-[9px]"
                     onClick={() => addComponent(type)}
                     title={def.label}
                   >
-                    {Icon && <Icon className="w-4 h-4 opacity-70" />}
-                    <span className="text-[10px] leading-tight">
+                    {Icon && <Icon className="w-3.5 h-3.5 opacity-70" />}
+                    <span className="leading-tight truncate w-full text-center">
                       {def.label}
                     </span>
                   </Button>

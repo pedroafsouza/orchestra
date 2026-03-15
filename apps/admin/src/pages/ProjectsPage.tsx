@@ -25,6 +25,35 @@ interface TemplateSummary {
   icon: string;
 }
 
+// Deterministic gradient based on project name for a nice visual banner
+const GRADIENTS = [
+  'from-indigo-500 to-purple-600',
+  'from-emerald-500 to-teal-600',
+  'from-orange-500 to-rose-600',
+  'from-sky-500 to-blue-600',
+  'from-pink-500 to-fuchsia-600',
+  'from-amber-500 to-orange-600',
+  'from-cyan-500 to-emerald-600',
+  'from-violet-500 to-indigo-600',
+];
+
+function getGradient(name: string) {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return GRADIENTS[Math.abs(hash) % GRADIENTS.length];
+}
+
+// Get initials (up to 2 chars) from project name
+function getInitials(name: string) {
+  return name
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase())
+    .join('');
+}
+
 export function ProjectsPage() {
   const navigate = useNavigate();
   const { projects, setProjects, addProject, removeProject } = useProjectStore();
@@ -33,7 +62,6 @@ export function ProjectsPage() {
   const [loading, setLoading] = useState(true);
   const [templates, setTemplates] = useState<TemplateSummary[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
-  const [creatingFromTemplate, setCreatingFromTemplate] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   useEffect(() => {
@@ -68,18 +96,17 @@ export function ProjectsPage() {
   };
 
   const handleCreateFromTemplate = async (tpl: TemplateSummary) => {
-    setCreatingFromTemplate(true);
     try {
       const project = await api('/api/projects', {
         method: 'POST',
         body: { name: tpl.name, templateId: tpl.id },
       });
       addProject(project);
+      setShowCreate(false);
+      setSelectedTemplate(null);
       navigate(`/project/${project.id}`);
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Failed to create project');
-    } finally {
-      setCreatingFromTemplate(false);
     }
   };
 
@@ -122,7 +149,7 @@ export function ProjectsPage() {
         {showCreate && (
           <Card className="mb-6">
             <CardContent className="p-5">
-              <div className="flex gap-3 mb-4">
+              <div className="flex gap-3 mb-5">
                 <Input
                   placeholder="Project name..."
                   value={newName}
@@ -136,7 +163,8 @@ export function ProjectsPage() {
                 </Button>
               </div>
 
-              <div>
+              {/* Start from — Blank or template */}
+              <div className="mb-1">
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
                   Start from
                 </p>
@@ -170,41 +198,35 @@ export function ProjectsPage() {
                   ))}
                 </div>
               </div>
+
+              {/* Quick-use template cards */}
+              {templates.length > 0 && (
+                <div className="mt-5 pt-4 border-t">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                    Or quick-start from a template
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {templates.map((tpl) => (
+                      <button
+                        key={tpl.id}
+                        className="flex items-center gap-3 p-3 rounded-lg border border-dashed border-border
+                          hover:border-primary hover:bg-primary/5 transition-all text-left group"
+                        onClick={() => handleCreateFromTemplate(tpl)}
+                      >
+                        <span className="text-2xl shrink-0">{tpl.icon}</span>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium group-hover:text-primary transition-colors">
+                            {tpl.name}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground truncate">{tpl.description}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
-        )}
-
-        {/* Example templates */}
-        {templates.length > 0 && (
-          <div className="mb-8">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-              Start from an example
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-              {templates.map((tpl) => (
-                <Card
-                  key={tpl.id}
-                  className="border-dashed border-2 cursor-pointer hover:border-primary hover:shadow-md transition-all group"
-                  onClick={() => handleCreateFromTemplate(tpl)}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className="text-3xl">{tpl.icon}</span>
-                      <div>
-                        <p className="font-semibold group-hover:text-primary transition-colors">
-                          {tpl.name}
-                        </p>
-                        <p className="text-xs text-muted-foreground">{tpl.description}</p>
-                      </div>
-                    </div>
-                    <span className="text-[10px] uppercase tracking-wider text-primary font-semibold">
-                      Use template →
-                    </span>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
         )}
 
         {projects.length === 0 ? (
@@ -213,46 +235,58 @@ export function ProjectsPage() {
             <p className="text-sm">Create your first project to get started.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {projects.map((project) => (
-              <Card
-                key={project.id}
-                className="cursor-pointer hover:shadow-md hover:border-primary/30 transition-all group"
-                onClick={() => navigate(`/project/${project.id}`)}
-              >
-                <CardContent className="p-5">
-                  <div className="flex items-start justify-between mb-1">
-                    <h3 className="font-semibold group-hover:text-primary transition-colors">
-                      {project.name}
-                    </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {projects.map((project) => {
+              const gradient = getGradient(project.name);
+              const initials = getInitials(project.name);
+              return (
+                <Card
+                  key={project.id}
+                  className="cursor-pointer hover:shadow-lg hover:border-primary/30 transition-all group overflow-hidden"
+                  onClick={() => navigate(`/project/${project.id}`)}
+                >
+                  {/* Decorative banner */}
+                  <div className={`h-28 bg-gradient-to-br ${gradient} relative overflow-hidden`}>
+                    {/* Abstract decorative shapes */}
+                    <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-white/10" />
+                    <div className="absolute right-10 -bottom-4 w-16 h-16 rounded-full bg-white/10" />
+                    <div className="absolute left-4 bottom-3 text-3xl font-bold text-white/30 tracking-wider">
+                      {initials}
+                    </div>
+                    {/* Delete button */}
                     <Button
                       variant="ghost"
                       size="icon-xs"
-                      className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive"
+                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-white/70 hover:text-white hover:bg-white/20"
                       onClick={(e) => {
                         e.stopPropagation();
                         setDeleteTarget({ id: project.id, name: project.name });
                       }}
                     >
-                      <Trash2 className="w-3 h-3" />
+                      <Trash2 className="w-3.5 h-3.5" />
                     </Button>
                   </div>
-                  <p className="text-xs text-muted-foreground font-mono mb-3">
-                    {project.guid}
-                  </p>
-                  <div className="flex gap-4 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <FolderKanban className="w-3 h-3" />
-                      {project._count?.flows ?? 0} flows
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Users className="w-3 h-3" />
-                      {project._count?.members ?? 0} members
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  <CardContent className="p-4">
+                    <h3 className="font-semibold group-hover:text-primary transition-colors mb-0.5">
+                      {project.name}
+                    </h3>
+                    <p className="text-[11px] text-muted-foreground font-mono mb-3">
+                      {project.guid}
+                    </p>
+                    <div className="flex gap-4 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <FolderKanban className="w-3 h-3" />
+                        {project._count?.flows ?? 0} flows
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Users className="w-3 h-3" />
+                        {project._count?.members ?? 0} members
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         )}
       </main>

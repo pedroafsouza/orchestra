@@ -1,17 +1,18 @@
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSun, faMoon } from '@fortawesome/free-solid-svg-icons';
+import { Sun, Moon } from 'lucide-react';
 import { useThemeStore } from '@/store/themeStore';
+import { Button } from '@/components/ui/button';
 
 export function ThemeToggle() {
   const { theme, toggleTheme } = useThemeStore();
 
   return (
-    <button
+    <Button
+      variant="ghost"
+      size="icon-sm"
       onClick={toggleTheme}
-      className="p-2 rounded-lg hover:bg-primary-200 dark:hover:bg-primary-700 text-primary-500 dark:text-primary-400 transition-colors"
       title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
     >
-      <FontAwesomeIcon icon={theme === 'dark' ? faSun : faMoon} className="w-4 h-4" />
-    </button>
+      {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+    </Button>
   );
 }

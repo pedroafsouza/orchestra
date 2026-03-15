@@ -1,64 +1,56 @@
 import { Handle, Position, type NodeProps } from '@xyflow/react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faHome,
-  faList,
-  faFileLines,
-  faMapLocationDot,
-  faImages,
-  faCodeBranch,
-  faCube,
-  faArrowRight,
-} from '@fortawesome/free-solid-svg-icons';
-import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
+  Home,
+  List,
+  FileText,
+  Map,
+  Images,
+  GitBranch,
+  Box,
+  ArrowRight,
+} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import type { OrchestraNodeData } from '@/store/flowStore';
 import { useFlowStore } from '@/store/flowStore';
 import type { ScreenComponent } from '@orchestra/shared';
 
-const NODE_STYLES: Record<string, { bg: string; accent: string; iconBg: string; icon: IconDefinition }> = {
+const NODE_STYLES: Record<string, { accent: string; iconBg: string; icon: LucideIcon }> = {
   landing: {
-    bg: 'bg-white dark:bg-slate-800',
     accent: 'bg-indigo-500',
     iconBg: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400',
-    icon: faHome,
+    icon: Home,
   },
   list: {
-    bg: 'bg-white dark:bg-slate-800',
     accent: 'bg-emerald-500',
     iconBg: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400',
-    icon: faList,
+    icon: List,
   },
   form: {
-    bg: 'bg-white dark:bg-slate-800',
     accent: 'bg-amber-500',
     iconBg: 'bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400',
-    icon: faFileLines,
+    icon: FileText,
   },
   map: {
-    bg: 'bg-white dark:bg-slate-800',
     accent: 'bg-sky-500',
     iconBg: 'bg-sky-100 text-sky-600 dark:bg-sky-500/20 dark:text-sky-400',
-    icon: faMapLocationDot,
+    icon: Map,
   },
   photo_gallery: {
-    bg: 'bg-white dark:bg-slate-800',
     accent: 'bg-rose-500',
     iconBg: 'bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400',
-    icon: faImages,
+    icon: Images,
   },
   decision: {
-    bg: 'bg-white dark:bg-slate-800',
     accent: 'bg-violet-500',
     iconBg: 'bg-violet-100 text-violet-600 dark:bg-violet-500/20 dark:text-violet-400',
-    icon: faCodeBranch,
+    icon: GitBranch,
   },
 };
 
 const DEFAULT_STYLE = {
-  bg: 'bg-white dark:bg-slate-800',
   accent: 'bg-gray-500',
   iconBg: 'bg-gray-100 text-gray-600 dark:bg-gray-500/20 dark:text-gray-400',
-  icon: faCube,
+  icon: Box,
 };
 
 /** Extract button labels with navigateTo from screen definition */
@@ -85,16 +77,16 @@ export function OrchestraNode({ id, data }: NodeProps) {
   const isSelected = selectedNodeId === id;
 
   const style = NODE_STYLES[nodeData.nodeType] || DEFAULT_STYLE;
+  const Icon = style.icon;
   const buttonLinks = getButtonLinks(nodeData);
 
   return (
     <div
       className={`
         relative rounded-xl min-w-[180px] max-w-[220px] overflow-hidden cursor-pointer
-        border border-gray-200 dark:border-slate-600/50
+        border bg-card
         shadow-sm hover:shadow-lg
         transition-all duration-200
-        ${style.bg}
         ${isSelected ? 'ring-2 ring-accent-500 shadow-lg scale-[1.02]' : ''}
       `}
       onClick={() => setSelectedNode(id)}
@@ -111,14 +103,14 @@ export function OrchestraNode({ id, data }: NodeProps) {
       <div className="px-4 py-3 flex items-center gap-3">
         {/* Icon circle */}
         <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${style.iconBg}`}>
-          <FontAwesomeIcon icon={style.icon} className="w-4 h-4" />
+          <Icon className="w-4 h-4" />
         </div>
 
         <div className="min-w-0">
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-slate-500">
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
             {nodeData.nodeType.replace('_', ' ')}
           </div>
-          <div className="text-sm font-medium text-gray-800 dark:text-white truncate">
+          <div className="text-sm font-medium text-foreground truncate">
             {nodeData.label}
           </div>
         </div>
@@ -129,7 +121,7 @@ export function OrchestraNode({ id, data }: NodeProps) {
         <div className="px-4 pb-1 space-y-1">
           {buttonLinks.map((label, i) => (
             <div key={i} className="flex items-center gap-1.5 text-[10px] text-accent-600 dark:text-accent-400">
-              <FontAwesomeIcon icon={faArrowRight} className="w-2.5 h-2.5" />
+              <ArrowRight className="w-2.5 h-2.5" />
               <span className="truncate">{label}</span>
             </div>
           ))}
@@ -138,7 +130,7 @@ export function OrchestraNode({ id, data }: NodeProps) {
 
       {/* Bottom info bar */}
       <div className="px-4 pb-2.5 pt-1 flex items-center gap-2">
-        <span className="text-[10px] text-gray-400 dark:text-slate-500">
+        <span className="text-[10px] text-muted-foreground">
           {nodeData.actions.length > 0 ? `${nodeData.actions.length} action${nodeData.actions.length > 1 ? 's' : ''}` : 'No actions'}
         </span>
       </div>

@@ -2,14 +2,14 @@ import { useScreenStore } from './screenStore';
 import { DEVICE_FRAMES, type DeviceFrame } from './types';
 import { ComponentPreview } from './ComponentPreview';
 import { useState } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMobileScreen, faTabletScreenButton, faDesktop } from '@fortawesome/free-solid-svg-icons';
-import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
+import { Smartphone, Tablet, Monitor } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
-const BP_ICONS: Record<string, IconDefinition> = {
-  phone: faMobileScreen,
-  tablet: faTabletScreenButton,
-  desktop: faDesktop,
+const BP_ICONS: Record<string, LucideIcon> = {
+  phone: Smartphone,
+  tablet: Tablet,
+  desktop: Monitor,
 };
 
 export function DevicePreview() {
@@ -31,50 +31,48 @@ export function DevicePreview() {
 
   return (
     <div className="flex-1 flex flex-col items-center overflow-auto p-4
-      bg-primary-100 dark:bg-primary-900">
+      bg-secondary">
       {/* Breakpoint selector */}
       <div className="flex gap-1 mb-3">
-        {(['phone', 'tablet', 'desktop'] as const).map((bp) => (
-          <button
-            key={bp}
-            className={`flex items-center gap-1.5 px-3 py-1 text-xs rounded-lg font-medium transition-colors ${
-              activeBreakpoint === bp
-                ? 'bg-accent-600 text-white'
-                : 'bg-white text-primary-600 hover:bg-primary-200 dark:bg-primary-700 dark:text-primary-300 dark:hover:bg-primary-600'
-            }`}
-            onClick={() => {
-              setActiveBreakpoint(bp);
-              setActiveFrameIndex(0);
-            }}
-          >
-            <FontAwesomeIcon icon={BP_ICONS[bp]} className="w-3.5 h-3.5" />
-            {bp.charAt(0).toUpperCase() + bp.slice(1)}
-          </button>
-        ))}
+        {(['phone', 'tablet', 'desktop'] as const).map((bp) => {
+          const Icon = BP_ICONS[bp];
+          return (
+            <Button
+              key={bp}
+              variant={activeBreakpoint === bp ? 'default' : 'secondary'}
+              size="sm"
+              onClick={() => {
+                setActiveBreakpoint(bp);
+                setActiveFrameIndex(0);
+              }}
+            >
+              <Icon className="w-3.5 h-3.5" />
+              {bp.charAt(0).toUpperCase() + bp.slice(1)}
+            </Button>
+          );
+        })}
       </div>
 
       {/* Frame variant selector */}
       {framesForBreakpoint.length > 1 && (
         <div className="flex gap-1 mb-3">
           {framesForBreakpoint.map((f, i) => (
-            <button
+            <Button
               key={f.name}
-              className={`px-2 py-0.5 text-[10px] rounded-md transition-colors ${
-                i === activeFrameIndex
-                  ? 'bg-primary-300 text-primary-800 dark:bg-primary-600 dark:text-white'
-                  : 'bg-white text-primary-500 hover:text-primary-800 dark:bg-primary-750 dark:text-primary-400 dark:hover:text-white'
-              }`}
+              variant={i === activeFrameIndex ? 'default' : 'secondary'}
+              size="sm"
+              className="text-[10px] px-2 py-0.5 h-auto"
               onClick={() => setActiveFrameIndex(i)}
             >
               {f.name} ({f.width}x{f.height})
-            </button>
+            </Button>
           ))}
         </div>
       )}
 
       {/* Device frame */}
       <div
-        className="relative bg-gray-900 dark:bg-black rounded-[40px] shadow-2xl border-4 border-gray-400 dark:border-primary-600"
+        className="relative bg-gray-900 dark:bg-black rounded-[40px] shadow-2xl border-4 border-gray-400 dark:border-gray-600"
         style={{
           width: frame.width * scale + 32,
           height: frame.height * scale + 32,
@@ -106,7 +104,7 @@ export function DevicePreview() {
             }}
           >
             {components.length === 0 ? (
-              <div className="flex items-center justify-center h-64 text-primary-400 dark:text-primary-500 text-sm">
+              <div className="flex items-center justify-center h-64 text-muted-foreground text-sm">
                 Add components from the palette
               </div>
             ) : (
@@ -123,7 +121,7 @@ export function DevicePreview() {
         </div>
       </div>
 
-      <p className="text-[10px] text-primary-400 dark:text-primary-500 mt-2">
+      <p className="text-[10px] text-muted-foreground mt-2">
         {frame.name} &middot; {frame.width} &times; {frame.height}
       </p>
     </div>

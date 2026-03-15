@@ -1,25 +1,20 @@
 import { useFlowStore, type OrchestraNodeData } from '@/store/flowStore';
 import type { NodeType, OrchestraAction, ActionTrigger, ActionType } from '@orchestra/shared';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faHome,
-  faList,
-  faFileLines,
-  faMapLocationDot,
-  faImages,
-  faCodeBranch,
-  faPlus,
-  faTrash,
-} from '@fortawesome/free-solid-svg-icons';
-import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
+import { Home, List, FileText, Map, Images, GitBranch, Plus, Trash2 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
 
-const NODE_TYPES: { type: NodeType; label: string; icon: IconDefinition }[] = [
-  { type: 'landing', label: 'Landing', icon: faHome },
-  { type: 'list', label: 'List', icon: faList },
-  { type: 'form', label: 'Form', icon: faFileLines },
-  { type: 'map', label: 'Map', icon: faMapLocationDot },
-  { type: 'photo_gallery', label: 'Gallery', icon: faImages },
-  { type: 'decision', label: 'Decision', icon: faCodeBranch },
+const NODE_TYPES: { type: NodeType; label: string; icon: LucideIcon }[] = [
+  { type: 'landing', label: 'Landing', icon: Home },
+  { type: 'list', label: 'List', icon: List },
+  { type: 'form', label: 'Form', icon: FileText },
+  { type: 'map', label: 'Map', icon: Map },
+  { type: 'photo_gallery', label: 'Gallery', icon: Images },
+  { type: 'decision', label: 'Decision', icon: GitBranch },
 ];
 
 const TRIGGERS: ActionTrigger[] = ['onLoad', 'onPress', 'onValueChange'];
@@ -30,17 +25,16 @@ function NodePalette() {
 
   return (
     <div className="mb-6">
-      <h3 className="text-xs font-semibold uppercase tracking-wider text-primary-500 dark:text-primary-400 mb-2">
+      <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
         Add Node
       </h3>
       <div className="grid grid-cols-2 gap-2">
-        {NODE_TYPES.map(({ type, label, icon }) => (
-          <button
+        {NODE_TYPES.map(({ type, label, icon: Icon }) => (
+          <Button
             key={type}
-            className="flex items-center gap-2 px-3 py-2.5 text-xs font-medium rounded-lg
-              bg-primary-100 hover:bg-primary-200 text-primary-700
-              dark:bg-primary-700 dark:hover:bg-primary-600 dark:text-white
-              transition-colors"
+            variant="secondary"
+            size="sm"
+            className="justify-start gap-2 text-xs font-medium"
             onClick={() =>
               addNode(type, {
                 x: 250 + Math.random() * 200,
@@ -48,9 +42,9 @@ function NodePalette() {
               })
             }
           >
-            <FontAwesomeIcon icon={icon} className="w-3.5 h-3.5 opacity-60" />
+            <Icon className="w-3.5 h-3.5 opacity-60" />
             {label}
-          </button>
+          </Button>
         ))}
       </div>
     </div>
@@ -83,41 +77,37 @@ function PropsEditor({
 
   return (
     <div className="mb-4">
-      <h3 className="text-xs font-semibold uppercase tracking-wider text-primary-500 dark:text-primary-400 mb-2">
+      <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
         Properties
       </h3>
       <div className="space-y-2">
         <div>
-          <label className="text-xs text-primary-500 dark:text-primary-400">Label</label>
-          <input
-            className="w-full px-2 py-1.5 text-sm rounded-lg border
-              bg-white border-primary-300 text-primary-800
-              dark:bg-primary-700 dark:border-primary-600 dark:text-white
-              focus:outline-none focus:ring-1 focus:ring-accent-500"
+          <Label className="text-xs text-muted-foreground">Label</Label>
+          <Input
+            className="h-8 text-sm"
             value={data.label}
             onChange={(e) => handleLabelChange(e.target.value)}
           />
         </div>
         {Object.entries(data.props).map(([key, value]) => (
           <div key={key}>
-            <label className="text-xs text-primary-500 dark:text-primary-400">{key}</label>
-            <input
-              className="w-full px-2 py-1.5 text-sm rounded-lg border
-                bg-white border-primary-300 text-primary-800
-                dark:bg-primary-700 dark:border-primary-600 dark:text-white
-                focus:outline-none focus:ring-1 focus:ring-accent-500"
+            <Label className="text-xs text-muted-foreground">{key}</Label>
+            <Input
+              className="h-8 text-sm"
               value={String(value)}
               onChange={(e) => handlePropChange(key, e.target.value)}
             />
           </div>
         ))}
-        <button
-          className="flex items-center gap-1 text-xs text-accent-600 dark:text-accent-400 hover:text-accent-500 dark:hover:text-accent-300"
+        <Button
+          variant="ghost"
+          size="sm"
+          className="gap-1 text-xs text-primary hover:text-primary/80 p-0 h-auto"
           onClick={handleAddProp}
         >
-          <FontAwesomeIcon icon={faPlus} className="w-2.5 h-2.5" />
+          <Plus className="w-2.5 h-2.5" />
           Add Property
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -158,30 +148,28 @@ function ActionsEditor({
 
   return (
     <div className="mb-4">
-      <h3 className="text-xs font-semibold uppercase tracking-wider text-primary-500 dark:text-primary-400 mb-2">
+      <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
         Actions
       </h3>
       <div className="space-y-3">
         {data.actions.map((action, i) => (
           <div
             key={i}
-            className="p-2.5 rounded-lg border space-y-1.5
-              bg-primary-50 border-primary-200
-              dark:bg-primary-700 dark:border-primary-600"
+            className="p-2.5 rounded-lg border border-border bg-muted/50 space-y-1.5"
           >
             <div className="flex justify-between items-center">
-              <span className="text-xs text-primary-500 dark:text-primary-300">Action {i + 1}</span>
-              <button
-                className="text-xs text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300"
+              <span className="text-xs text-muted-foreground">Action {i + 1}</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-auto p-0 text-destructive hover:text-destructive/80"
                 onClick={() => removeAction(i)}
               >
-                <FontAwesomeIcon icon={faTrash} className="w-3 h-3" />
-              </button>
+                <Trash2 className="w-3 h-3" />
+              </Button>
             </div>
             <select
-              className="w-full px-2 py-1 text-xs rounded-lg border
-                bg-white border-primary-300 text-primary-800
-                dark:bg-primary-800 dark:border-primary-600 dark:text-white"
+              className="h-8 w-full rounded-md border border-input bg-background px-2 text-xs"
               value={action.trigger}
               onChange={(e) =>
                 updateAction(i, { trigger: e.target.value as ActionTrigger })
@@ -192,9 +180,7 @@ function ActionsEditor({
               ))}
             </select>
             <select
-              className="w-full px-2 py-1 text-xs rounded-lg border
-                bg-white border-primary-300 text-primary-800
-                dark:bg-primary-800 dark:border-primary-600 dark:text-white"
+              className="h-8 w-full rounded-md border border-input bg-background px-2 text-xs"
               value={action.type}
               onChange={(e) =>
                 updateAction(i, { type: e.target.value as ActionType })
@@ -204,10 +190,8 @@ function ActionsEditor({
                 <option key={t} value={t}>{t}</option>
               ))}
             </select>
-            <input
-              className="w-full px-2 py-1 text-xs rounded-lg border
-                bg-white border-primary-300 text-primary-800
-                dark:bg-primary-800 dark:border-primary-600 dark:text-white"
+            <Input
+              className="h-8 text-xs"
               placeholder="Payload (JSON)"
               value={
                 typeof action.payload === 'string'
@@ -224,13 +208,15 @@ function ActionsEditor({
             />
           </div>
         ))}
-        <button
-          className="flex items-center gap-1 text-xs text-accent-600 dark:text-accent-400 hover:text-accent-500 dark:hover:text-accent-300"
+        <Button
+          variant="ghost"
+          size="sm"
+          className="gap-1 text-xs text-primary hover:text-primary/80 p-0 h-auto"
           onClick={addAction}
         >
-          <FontAwesomeIcon icon={faPlus} className="w-2.5 h-2.5" />
+          <Plus className="w-2.5 h-2.5" />
           Add Action
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -242,33 +228,34 @@ export function Sidebar() {
   const selectedNode = nodes.find((n) => n.id === selectedNodeId);
 
   return (
-    <aside className="w-72 p-4 overflow-y-auto border-l
-      bg-white border-primary-200 text-primary-800
-      dark:bg-primary-800 dark:border-primary-700 dark:text-white">
-      <NodePalette />
+    <ScrollArea className="w-72 border-l border-border bg-card text-foreground">
+      <div className="p-4">
+        <NodePalette />
 
-      {selectedNode ? (
-        <>
-          <div className="border-t border-primary-200 dark:border-primary-600 pt-4 mb-4">
-            <h2 className="text-sm font-semibold mb-1">
-              Editing: {selectedNode.data.label}
-            </h2>
-            <p className="text-xs text-primary-500 dark:text-primary-400">ID: {selectedNode.id}</p>
-          </div>
-          <PropsEditor
-            nodeId={selectedNode.id}
-            data={selectedNode.data as unknown as OrchestraNodeData}
-          />
-          <ActionsEditor
-            nodeId={selectedNode.id}
-            data={selectedNode.data as unknown as OrchestraNodeData}
-          />
-        </>
-      ) : (
-        <p className="text-xs text-primary-500 dark:text-primary-400 italic">
-          Select a node to edit its properties and actions.
-        </p>
-      )}
-    </aside>
+        {selectedNode ? (
+          <>
+            <Separator className="mb-4" />
+            <div className="mb-4">
+              <h2 className="text-sm font-semibold text-foreground mb-1">
+                Editing: {selectedNode.data.label}
+              </h2>
+              <p className="text-xs text-muted-foreground">ID: {selectedNode.id}</p>
+            </div>
+            <PropsEditor
+              nodeId={selectedNode.id}
+              data={selectedNode.data as unknown as OrchestraNodeData}
+            />
+            <ActionsEditor
+              nodeId={selectedNode.id}
+              data={selectedNode.data as unknown as OrchestraNodeData}
+            />
+          </>
+        ) : (
+          <p className="text-xs text-muted-foreground italic">
+            Select a node to edit its properties and actions.
+          </p>
+        )}
+      </div>
+    </ScrollArea>
   );
 }

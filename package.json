@@ -8,6 +8,7 @@
   "scripts": {
     "dev:admin": "npm -w apps/admin run dev",
     "dev:api": "npm -w apps/api run dev",
+    "dev:landing": "npm -w apps/landing run dev",
     "build": "npm -w packages/shared run build && npm -w packages/database run build && npm -w apps/admin run build && npm -w apps/api run build",
     "build:shared": "npm -w packages/shared run build",
     "build:database": "npm -w packages/database run build",

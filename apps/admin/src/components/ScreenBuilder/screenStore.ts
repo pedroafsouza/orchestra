@@ -19,6 +19,7 @@ interface ScreenStore {
   setActiveBreakpoint: (bp: Breakpoint) => void;
   setBackgroundColor: (color: string) => void;
   addChildComponent: (parentId: string, type: ScreenComponentType) => void;
+  updateComponentActions: (id: string, actions: any[]) => void;
 }
 
 let componentIdCounter = 0;
@@ -127,6 +128,15 @@ export const useScreenStore = create<ScreenStore>((set, get) => ({
 
   setActiveBreakpoint: (bp) => set({ activeBreakpoint: bp }),
   setBackgroundColor: (color) => set({ backgroundColor: color }),
+
+  updateComponentActions: (id, actions) => {
+    set({
+      components: updateDeep(get().components, id, (c) => ({
+        ...c,
+        actions,
+      })),
+    });
+  },
 
   addChildComponent: (parentId, type) => {
     const defaults = COMPONENT_DEFAULTS[type];

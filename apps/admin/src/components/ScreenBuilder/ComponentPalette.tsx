@@ -1,47 +1,50 @@
 import { COMPONENT_DEFAULTS, type ScreenComponentType } from '@orchestra/shared';
 import { useScreenStore } from './screenStore';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faFont,
-  faHandPointer,
-  faImage,
-  faStar,
-  faGripLines,
-  faMinus,
-  faKeyboard,
-  faChevronDown,
-  faBoxOpen,
-  faIdCard,
-  faArrowsLeftRight,
-  faFilm,
-  faPhotoFilm,
-  faList,
-  faImages,
-  faCircleUser,
-  faTag,
-  faVideo,
-} from '@fortawesome/free-solid-svg-icons';
-import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
+  Type,
+  MousePointer,
+  Image,
+  Star,
+  GripHorizontal,
+  Minus,
+  Keyboard,
+  ChevronDown,
+  Box,
+  CreditCard,
+  ArrowLeftRight,
+  Film,
+  ImagePlay,
+  List,
+  Images,
+  CircleUser,
+  Tag,
+  Video,
+  CheckSquare,
+} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
-const COMPONENT_ICONS: Record<string, IconDefinition> = {
-  text: faFont,
-  button: faHandPointer,
-  image: faImage,
-  icon: faStar,
-  spacer: faGripLines,
-  divider: faMinus,
-  input: faKeyboard,
-  combobox: faChevronDown,
-  container: faBoxOpen,
-  card: faIdCard,
-  horizontal_scroll: faArrowsLeftRight,
-  carousel: faFilm,
-  hero: faPhotoFilm,
-  list: faList,
-  gallery: faImages,
-  avatar: faCircleUser,
-  badge: faTag,
-  video: faVideo,
+const COMPONENT_ICONS: Record<string, LucideIcon> = {
+  text: Type,
+  button: MousePointer,
+  image: Image,
+  icon: Star,
+  spacer: GripHorizontal,
+  divider: Minus,
+  input: Keyboard,
+  combobox: ChevronDown,
+  container: Box,
+  card: CreditCard,
+  horizontal_scroll: ArrowLeftRight,
+  carousel: Film,
+  hero: ImagePlay,
+  list: List,
+  gallery: Images,
+  avatar: CircleUser,
+  badge: Tag,
+  video: Video,
+  checkbox: CheckSquare,
 };
 
 const CATEGORIES: { label: string; types: ScreenComponentType[] }[] = [
@@ -51,7 +54,7 @@ const CATEGORIES: { label: string; types: ScreenComponentType[] }[] = [
   },
   {
     label: 'Input',
-    types: ['input', 'combobox'],
+    types: ['input', 'combobox', 'checkbox'],
   },
   {
     label: 'Layout',
@@ -67,40 +70,40 @@ export function ComponentPalette() {
   const addComponent = useScreenStore((s) => s.addComponent);
 
   return (
-    <div className="w-56 overflow-y-auto p-3 border-r
-      bg-white border-primary-200
-      dark:bg-primary-800 dark:border-primary-700">
-      <h3 className="text-xs font-semibold uppercase tracking-wider text-primary-500 dark:text-primary-400 mb-3">
-        Components
-      </h3>
-      {CATEGORIES.map((cat) => (
-        <div key={cat.label} className="mb-4">
-          <p className="text-[10px] uppercase tracking-widest text-primary-400 dark:text-primary-500 mb-1.5">
-            {cat.label}
-          </p>
-          <div className="grid grid-cols-2 gap-1.5">
-            {cat.types.map((type) => {
-              const def = COMPONENT_DEFAULTS[type];
-              const icon = COMPONENT_ICONS[type];
-              return (
-                <button
-                  key={type}
-                  className="flex flex-col items-center gap-1 px-2 py-2.5 rounded-lg transition-colors text-center
-                    bg-primary-50 hover:bg-primary-100 text-primary-600
-                    dark:bg-primary-700 dark:hover:bg-primary-600 dark:text-primary-300"
-                  onClick={() => addComponent(type)}
-                  title={def.label}
-                >
-                  {icon && <FontAwesomeIcon icon={icon} className="w-4 h-4 opacity-70" />}
-                  <span className="text-[10px] leading-tight">
-                    {def.label}
-                  </span>
-                </button>
-              );
-            })}
+    <ScrollArea className="w-56 border-r bg-card border-border">
+      <div className="p-3">
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+          Components
+        </h3>
+        {CATEGORIES.map((cat) => (
+          <div key={cat.label} className="mb-4">
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1.5">
+              {cat.label}
+            </p>
+            <div className="grid grid-cols-2 gap-1.5">
+              {cat.types.map((type) => {
+                const def = COMPONENT_DEFAULTS[type];
+                const Icon = COMPONENT_ICONS[type];
+                return (
+                  <Button
+                    key={type}
+                    variant="secondary"
+                    size="sm"
+                    className="flex flex-col items-center gap-1 h-auto px-2 py-2.5"
+                    onClick={() => addComponent(type)}
+                    title={def.label}
+                  >
+                    {Icon && <Icon className="w-4 h-4 opacity-70" />}
+                    <span className="text-[10px] leading-tight">
+                      {def.label}
+                    </span>
+                  </Button>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      ))}
-    </div>
+        ))}
+      </div>
+    </ScrollArea>
   );
 }

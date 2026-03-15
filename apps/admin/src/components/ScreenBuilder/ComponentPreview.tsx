@@ -364,6 +364,33 @@ function renderComponentContent(
         </div>
       );
 
+    case 'checkbox':
+      return (
+        <label
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            cursor: 'pointer',
+            color: '#f8fafc',
+            fontSize: 14,
+            ...resolveStyle(component, breakpoint),
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={props.checked || false}
+            disabled
+            style={{
+              width: 18,
+              height: 18,
+              accentColor: '#6366f1',
+            }}
+          />
+          {props.label || 'Checkbox'}
+        </label>
+      );
+
     case 'list':
       return (
         <div

@@ -76,6 +76,7 @@ export const ScreenComponentType = z.enum([
   'avatar',
   'badge',
   'list',
+  'checkbox',
 ]);
 export type ScreenComponentType = z.infer<typeof ScreenComponentType>;
 
@@ -156,6 +157,7 @@ export const COMPONENT_DEFAULTS: Record<ScreenComponentType, { props: Record<str
   avatar: { props: { src: '', size: 48 }, label: 'Avatar', icon: '\u{1F464}' },
   badge: { props: { text: 'New', color: '#6366f1' }, label: 'Badge', icon: '\u{1F3F7}' },
   list: { props: { direction: 'vertical', gap: 8 }, label: 'List', icon: '\u{1F4CB}' },
+  checkbox: { props: { label: 'Checkbox', checked: false }, label: 'Checkbox', icon: '\u{2611}' },
 };
 
 // ─── Screen Definition (per node) ────────────────────────────────────────────

@@ -18,6 +18,8 @@ export const ActionType = z.enum([
   'SET_CONTEXT',
   'GET_GEO',
   'API_CALL',
+  'DATASOURCE_ADD',
+  'DATASOURCE_UPDATE',
 ]);
 export type ActionType = z.infer<typeof ActionType>;
 

@@ -1,8 +1,9 @@
 import { useScreenStore } from './screenStore';
 import { COMPONENT_DEFAULTS } from '@orchestra/shared';
 import type { ScreenComponent } from '@orchestra/shared';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronUp, faChevronDown } from '@fortawesome/free-solid-svg-icons';
+import { ChevronUp, ChevronDown } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 function TreeItem({
   component,
@@ -21,8 +22,8 @@ function TreeItem({
       <button
         className={`w-full text-left px-2 py-1 text-[11px] flex items-center gap-1.5 rounded-md transition-colors ${
           isSelected
-            ? 'bg-accent-100 text-accent-700 dark:bg-accent-600/30 dark:text-accent-300'
-            : 'text-primary-600 hover:bg-primary-100 dark:text-primary-300 dark:hover:bg-primary-700'
+            ? 'bg-accent text-accent-foreground'
+            : 'text-foreground hover:bg-secondary'
         }`}
         style={{ paddingLeft: 8 + depth * 14 }}
         onClick={() => selectComponent(component.id)}
@@ -46,43 +47,47 @@ export function ComponentTree() {
   const moveComponent = useScreenStore((s) => s.moveComponent);
 
   return (
-    <div className="flex-1 overflow-y-auto p-1 border-t
-      bg-primary-50 border-primary-200
-      dark:bg-primary-850 dark:border-primary-700">
-      <p className="text-[9px] uppercase tracking-widest text-primary-400 dark:text-primary-500 px-2 py-1">
-        Layer Tree
-      </p>
-      {components.length === 0 ? (
-        <p className="text-[10px] text-primary-400 dark:text-primary-500 px-2 py-2 italic">
-          No components yet
+    <ScrollArea className="flex-1 border-t bg-secondary border-border">
+      <div className="p-1">
+        <p className="text-[9px] uppercase tracking-widest text-muted-foreground px-2 py-1">
+          Layer Tree
         </p>
-      ) : (
-        <>
-          {components.map((comp, index) => (
-            <div key={comp.id} className="relative group">
-              {index > 0 && (
-                <button
-                  className="absolute -top-1 right-1 opacity-0 group-hover:opacity-100 text-primary-400 hover:text-primary-800 dark:hover:text-white z-10"
-                  onClick={() => moveComponent(index, index - 1)}
-                  title="Move up"
-                >
-                  <FontAwesomeIcon icon={faChevronUp} className="w-2.5 h-2.5" />
-                </button>
-              )}
-              {index < components.length - 1 && (
-                <button
-                  className="absolute -bottom-1 right-1 opacity-0 group-hover:opacity-100 text-primary-400 hover:text-primary-800 dark:hover:text-white z-10"
-                  onClick={() => moveComponent(index, index + 1)}
-                  title="Move down"
-                >
-                  <FontAwesomeIcon icon={faChevronDown} className="w-2.5 h-2.5" />
-                </button>
-              )}
-              <TreeItem component={comp} depth={0} />
-            </div>
-          ))}
-        </>
-      )}
-    </div>
+        {components.length === 0 ? (
+          <p className="text-[10px] text-muted-foreground px-2 py-2 italic">
+            No components yet
+          </p>
+        ) : (
+          <>
+            {components.map((comp, index) => (
+              <div key={comp.id} className="relative group">
+                {index > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    className="absolute -top-1 right-1 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground z-10"
+                    onClick={() => moveComponent(index, index - 1)}
+                    title="Move up"
+                  >
+                    <ChevronUp className="w-2.5 h-2.5" />
+                  </Button>
+                )}
+                {index < components.length - 1 && (
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    className="absolute -bottom-1 right-1 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground z-10"
+                    onClick={() => moveComponent(index, index + 1)}
+                    title="Move down"
+                  >
+                    <ChevronDown className="w-2.5 h-2.5" />
+                  </Button>
+                )}
+                <TreeItem component={comp} depth={0} />
+              </div>
+            ))}
+          </>
+        )}
+      </div>
+    </ScrollArea>
   );
 }

@@ -45,7 +45,7 @@ export function FlowEditorPage() {
   const isDark = theme === 'dark';
 
   return (
-    <div className="h-screen flex flex-col bg-primary-100 dark:bg-primary-950">
+    <div className="h-screen flex flex-col bg-secondary">
       <Toolbar
         projectId={projectId!}
         onBack={() => navigate(`/project/${projectId}`)}
@@ -62,17 +62,17 @@ export function FlowEditorPage() {
             onPaneClick={() => setSelectedNode(null)}
             onNodeDoubleClick={handleNodeDoubleClick}
             fitView
-            className={isDark ? 'bg-primary-950' : 'bg-primary-50'}
+            className={isDark ? 'bg-background' : 'bg-secondary'}
           >
             <Background
               variant={BackgroundVariant.Dots}
-              color={isDark ? '#334155' : '#cbd5e1'}
+              color={isDark ? 'hsl(217 33% 22%)' : 'hsl(214 32% 78%)'}
               gap={20}
             />
             <Controls />
             <MiniMap
-              className={isDark ? '!bg-primary-800' : '!bg-white'}
-              nodeColor={isDark ? '#6366f1' : '#4f46e5'}
+              className={isDark ? '!bg-card' : '!bg-card'}
+              nodeColor="hsl(var(--primary))"
               maskColor={isDark ? 'rgba(0, 0, 0, 0.4)' : 'rgba(0, 0, 0, 0.08)'}
             />
           </ReactFlow>

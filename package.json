@@ -1,0 +1,20 @@
+{
+  "name": "orchestra-ai",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:admin": "npm -w apps/admin run dev",
+    "dev:api": "npm -w apps/api run dev",
+    "build": "npm -w packages/shared run build && npm -w packages/database run build && npm -w apps/admin run build && npm -w apps/api run build",
+    "build:shared": "npm -w packages/shared run build",
+    "build:database": "npm -w packages/database run build",
+    "lint": "npm -ws run lint --if-present",
+    "typecheck": "npm -ws run typecheck --if-present"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

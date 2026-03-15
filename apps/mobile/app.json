@@ -1,0 +1,11 @@
+{
+  "expo": {
+    "name": "Orchestra Mobile",
+    "slug": "orchestra-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "orchestra",
+    "platforms": ["ios", "android"],
+    "plugins": ["expo-router"]
+  }
+}

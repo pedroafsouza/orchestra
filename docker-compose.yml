@@ -1,0 +1,50 @@
+services:
+  orchestra-db:
+    image: mongo:7
+    command: ['--replSet', 'rs0', '--bind_ip_all', '--noauth']
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongodata:/data/db
+    networks:
+      - orchestra-net
+    healthcheck:
+      test: ['CMD', 'mongosh', '--quiet', '--eval', "try{rs.status().ok}catch(e){rs.initiate({_id:'rs0',members:[{_id:0,host:'localhost:27017'}]}).ok}"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+
+  orchestra-api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    ports:
+      - '3001:3001'
+    environment:
+      DATABASE_URL: mongodb://orchestra-db:27017/orchestra?replicaSet=rs0&directConnection=true
+      MAPBOX_ACCESS_TOKEN: ${MAPBOX_ACCESS_TOKEN:-}
+      NEXTAUTH_URL: http://localhost:3001
+      NEXTAUTH_SECRET: dev-secret-change-in-production
+    depends_on:
+      orchestra-db:
+        condition: service_healthy
+    networks:
+      - orchestra-net
+
+  orchestra-admin:
+    build:
+      context: .
+      dockerfile: apps/admin/Dockerfile
+    ports:
+      - '5173:5173'
+    environment:
+      VITE_API_URL: http://localhost:3001
+    networks:
+      - orchestra-net
+
+volumes:
+  mongodata:
+
+networks:
+  orchestra-net:
+    driver: bridge

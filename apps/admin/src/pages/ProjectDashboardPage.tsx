@@ -5,7 +5,7 @@ import { api } from '@/lib/api';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft, PenLine, Database, Settings } from 'lucide-react';
+import { ArrowLeft, PenLine, Database, Play, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function ProjectDashboardPage() {
@@ -44,6 +44,13 @@ export function ProjectDashboardPage() {
       title: 'Datasources',
       desc: 'Manage collections and content',
       onClick: () => navigate(`/project/${projectId}/datasources`),
+    },
+    {
+      icon: Play,
+      iconBg: 'bg-violet-500/10 text-violet-600 dark:text-violet-400',
+      title: 'Live Preview',
+      desc: 'Test your app in an interactive simulator',
+      onClick: () => navigate(`/project/${projectId}/preview`),
     },
     {
       icon: Settings,

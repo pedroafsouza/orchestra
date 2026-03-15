@@ -5,6 +5,8 @@ import { ComponentPalette } from './ComponentPalette';
 import { DevicePreview } from './DevicePreview';
 import { StyleEditor } from './StyleEditor';
 import { ComponentTree } from './ComponentTree';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faXmark, faFloppyDisk } from '@fortawesome/free-solid-svg-icons';
 
 interface Props {
   nodeId: string;
@@ -22,7 +24,6 @@ export function ScreenBuilderModal({ nodeId, onClose }: Props) {
   const setBackgroundColor = useScreenStore((s) => s.setBackgroundColor);
   const selectComponent = useScreenStore((s) => s.selectComponent);
 
-  // Load existing screen data from node
   useEffect(() => {
     const data = node?.data as unknown as OrchestraNodeData;
     if (data?.props?.screenDefinition) {
@@ -54,28 +55,36 @@ export function ScreenBuilderModal({ nodeId, onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-      <div className="w-[95vw] h-[92vh] bg-primary-950 rounded-2xl border border-primary-700 shadow-2xl flex flex-col overflow-hidden">
+      <div className="w-[95vw] h-[92vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden border
+        bg-primary-50 border-primary-200
+        dark:bg-primary-950 dark:border-primary-700">
         {/* Header */}
-        <div className="h-12 bg-primary-900 border-b border-primary-700 flex items-center justify-between px-4 shrink-0">
+        <div className="h-12 flex items-center justify-between px-4 shrink-0 border-b
+          bg-white border-primary-200
+          dark:bg-primary-900 dark:border-primary-700">
           <div className="flex items-center gap-3">
-            <h2 className="text-sm font-semibold text-white">
-              Screen Builder — {nodeData.label}
+            <h2 className="text-sm font-semibold text-primary-800 dark:text-white">
+              Screen Builder
             </h2>
-            <span className="text-xs text-primary-500">
-              ({nodeData.nodeType})
+            <span className="text-xs text-primary-400 dark:text-primary-500">
+              {nodeData.label} ({nodeData.nodeType})
             </span>
           </div>
           <div className="flex gap-2">
             <button
-              className="px-3 py-1 text-xs bg-primary-700 hover:bg-primary-600 rounded text-white transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1 text-xs rounded-lg transition-colors
+                bg-primary-100 hover:bg-primary-200 text-primary-700
+                dark:bg-primary-700 dark:hover:bg-primary-600 dark:text-white"
               onClick={onClose}
             >
+              <FontAwesomeIcon icon={faXmark} className="w-3 h-3" />
               Cancel
             </button>
             <button
-              className="px-4 py-1 text-xs bg-accent-600 hover:bg-accent-500 rounded text-white font-medium transition-colors"
+              className="flex items-center gap-1.5 px-4 py-1 text-xs bg-accent-600 hover:bg-accent-500 rounded-lg text-white font-medium transition-colors"
               onClick={handleSave}
             >
+              <FontAwesomeIcon icon={faFloppyDisk} className="w-3 h-3" />
               Save Screen
             </button>
           </div>
@@ -83,16 +92,11 @@ export function ScreenBuilderModal({ nodeId, onClose }: Props) {
 
         {/* Body */}
         <div className="flex flex-1 overflow-hidden">
-          {/* Left: Palette + Component Tree */}
           <div className="flex flex-col w-56 shrink-0">
             <ComponentPalette />
             <ComponentTree />
           </div>
-
-          {/* Center: Device Preview */}
           <DevicePreview />
-
-          {/* Right: Style Editor */}
           <StyleEditor />
         </div>
       </div>

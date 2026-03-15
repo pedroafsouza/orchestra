@@ -6,3 +6,17 @@ body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
+
+/* Light mode overrides — applied when <html class="light"> */
+.light .react-flow__controls button {
+  background: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+  color: #334155 !important;
+  fill: #334155 !important;
+}
+.light .react-flow__controls button:hover {
+  background: #e2e8f0 !important;
+}
+.light .react-flow__minimap {
+  background: #f8fafc !important;
+}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   ReactFlow,
   Background,
@@ -8,6 +8,7 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { useFlowStore } from '@/store/flowStore';
+import { useThemeStore } from '@/store/themeStore';
 import { OrchestraNode } from '@/components/OrchestraNode';
 import { Sidebar } from '@/components/Sidebar';
 import { Toolbar } from '@/components/Toolbar';
@@ -21,22 +22,30 @@ const nodeTypes = {
 export function FlowEditorPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
+  const theme = useThemeStore((s) => s.theme);
+  const loadDiagram = useFlowStore((s) => s.loadDiagram);
+  const loaded = useFlowStore((s) => s.loaded);
   const nodes = useFlowStore((s) => s.nodes);
   const edges = useFlowStore((s) => s.edges);
   const onNodesChange = useFlowStore((s) => s.onNodesChange);
   const onEdgesChange = useFlowStore((s) => s.onEdgesChange);
   const onConnect = useFlowStore((s) => s.onConnect);
   const setSelectedNode = useFlowStore((s) => s.setSelectedNode);
-  const selectedNodeId = useFlowStore((s) => s.selectedNodeId);
 
   const [screenBuilderNodeId, setScreenBuilderNodeId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (projectId) loadDiagram(projectId);
+  }, [projectId]);
 
   const handleNodeDoubleClick = (_event: React.MouseEvent, node: any) => {
     setScreenBuilderNodeId(node.id);
   };
 
+  const isDark = theme === 'dark';
+
   return (
-    <div className="h-screen flex flex-col bg-primary-950">
+    <div className="h-screen flex flex-col bg-primary-100 dark:bg-primary-950">
       <Toolbar
         projectId={projectId!}
         onBack={() => navigate(`/project/${projectId}`)}
@@ -53,18 +62,18 @@ export function FlowEditorPage() {
             onPaneClick={() => setSelectedNode(null)}
             onNodeDoubleClick={handleNodeDoubleClick}
             fitView
-            className="bg-primary-950"
+            className={isDark ? 'bg-primary-950' : 'bg-primary-50'}
           >
             <Background
               variant={BackgroundVariant.Dots}
-              color="#334155"
+              color={isDark ? '#334155' : '#cbd5e1'}
               gap={20}
             />
-            <Controls className="!bg-primary-800 !border-primary-600 !text-white" />
+            <Controls />
             <MiniMap
-              className="!bg-primary-800"
-              nodeColor="#6366f1"
-              maskColor="rgba(0, 0, 0, 0.4)"
+              className={isDark ? '!bg-primary-800' : '!bg-white'}
+              nodeColor={isDark ? '#6366f1' : '#4f46e5'}
+              maskColor={isDark ? 'rgba(0, 0, 0, 0.4)' : 'rgba(0, 0, 0, 0.08)'}
             />
           </ReactFlow>
         </div>

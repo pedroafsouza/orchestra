@@ -139,7 +139,7 @@ export type DatasourceField = z.infer<typeof DatasourceFieldSchema>;
 
 export const COMPONENT_DEFAULTS: Record<ScreenComponentType, { props: Record<string, any>; label: string; icon: string }> = {
   text: { props: { content: 'Text block' }, label: 'Text', icon: '\u{1F524}' },
-  button: { props: { label: 'Button', variant: 'primary' }, label: 'Button', icon: '\u{1F518}' },
+  button: { props: { label: 'Button', variant: 'primary', navigateTo: '' }, label: 'Button', icon: '\u{1F518}' },
   image: { props: { src: '', alt: 'Image' }, label: 'Image', icon: '\u{1F5BC}' },
   combobox: { props: { label: 'Select', options: [], placeholder: 'Choose...' }, label: 'Combo Box', icon: '\u{1F503}' },
   gallery: { props: { columns: 2 }, label: 'Gallery', icon: '\u{1F4F7}' },

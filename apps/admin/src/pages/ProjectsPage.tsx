@@ -16,7 +16,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Plus, FolderKanban, Users, Trash2 } from 'lucide-react';
+import { Plus, FolderKanban, Users, Trash2, ClipboardList } from 'lucide-react';
 
 interface TemplateSummary {
   id: string;
@@ -46,6 +46,22 @@ function getGradient(name: string) {
 }
 
 // Get initials (up to 2 chars) from project name
+// SVG illustration for template cards
+function TemplateIllustration({ templateId }: { templateId: string }) {
+  if (templateId === 'todo-list') {
+    return (
+      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-md shadow-indigo-500/20">
+        <ClipboardList className="w-6 h-6 text-white" />
+      </div>
+    );
+  }
+  return (
+    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center shadow-md">
+      <Plus className="w-6 h-6 text-white" />
+    </div>
+  );
+}
+
 function getInitials(name: string) {
   return name
     .split(/\s+/)
@@ -191,7 +207,9 @@ export function ProjectsPage() {
                       }`}
                       onClick={() => setSelectedTemplate(tpl.id)}
                     >
-                      <div className="text-2xl mb-1">{tpl.icon}</div>
+                      <div className="mb-2">
+                        <TemplateIllustration templateId={tpl.id} />
+                      </div>
                       <p className="text-sm font-medium">{tpl.name}</p>
                       <p className="text-[10px] text-muted-foreground line-clamp-2">{tpl.description}</p>
                     </button>
@@ -199,32 +217,8 @@ export function ProjectsPage() {
                 </div>
               </div>
 
-              {/* Quick-use template cards */}
-              {templates.length > 0 && (
-                <div className="mt-5 pt-4 border-t">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-                    Or quick-start from a template
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {templates.map((tpl) => (
-                      <button
-                        key={tpl.id}
-                        className="flex items-center gap-3 p-3 rounded-lg border border-dashed border-border
-                          hover:border-primary hover:bg-primary/5 transition-all text-left group"
-                        onClick={() => handleCreateFromTemplate(tpl)}
-                      >
-                        <span className="text-2xl shrink-0">{tpl.icon}</span>
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium group-hover:text-primary transition-colors">
-                            {tpl.name}
-                          </p>
-                          <p className="text-[10px] text-muted-foreground truncate">{tpl.description}</p>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
+
+
             </CardContent>
           </Card>
         )}
@@ -242,15 +236,22 @@ export function ProjectsPage() {
               return (
                 <Card
                   key={project.id}
-                  className="cursor-pointer hover:shadow-lg hover:border-primary/30 transition-all group overflow-hidden"
+                  className="cursor-pointer shadow-sm hover:shadow-xl hover:-translate-y-1 hover:border-primary/30 transition-all duration-200 group overflow-hidden"
                   onClick={() => navigate(`/project/${project.id}`)}
                 >
                   {/* Decorative banner */}
-                  <div className={`h-28 bg-gradient-to-br ${gradient} relative overflow-hidden`}>
-                    {/* Abstract decorative shapes */}
-                    <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-white/10" />
-                    <div className="absolute right-10 -bottom-4 w-16 h-16 rounded-full bg-white/10" />
-                    <div className="absolute left-4 bottom-3 text-3xl font-bold text-white/30 tracking-wider">
+                  <div className={`h-32 bg-gradient-to-br ${gradient} relative overflow-hidden`}>
+                    {/* Layered depth shapes */}
+                    <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-black/10 blur-sm" />
+                    <div className="absolute -right-4 -top-4 w-28 h-28 rounded-full bg-white/10" />
+                    <div className="absolute right-12 -bottom-6 w-20 h-20 rounded-full bg-black/10 blur-sm" />
+                    <div className="absolute right-14 -bottom-4 w-16 h-16 rounded-full bg-white/10" />
+                    <div className="absolute -left-4 top-6 w-14 h-14 rounded-2xl rotate-12 bg-white/[0.07]" />
+                    <div className="absolute left-20 -top-3 w-10 h-10 rounded-lg rotate-45 bg-white/[0.06]" />
+                    {/* Subtle bottom gradient for depth */}
+                    <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/20 to-transparent" />
+                    {/* Initials */}
+                    <div className="absolute left-4 bottom-3 text-3xl font-extrabold text-white/25 tracking-wider drop-shadow-sm">
                       {initials}
                     </div>
                     {/* Delete button */}

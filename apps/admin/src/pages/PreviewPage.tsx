@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { PreviewRuntime } from '@/components/Preview/PreviewRuntime';
@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { ArrowLeft, Smartphone, Tablet, Monitor } from 'lucide-react';
+import { ArrowLeft, Smartphone, Tablet, Monitor, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { OrchestraNodeData } from '@/store/flowStore';
 import type { Node, Edge } from '@xyflow/react';
@@ -35,6 +35,25 @@ export function PreviewPage() {
   const [projectName, setProjectName] = useState('');
   const [breakpoint, setBreakpoint] = useState<Breakpoint>('phone');
   const [loading, setLoading] = useState(true);
+  const [transitioning, setTransitioning] = useState(false);
+  const [direction, setDirection] = useState<'left' | 'right'>('left');
+  const transitionTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const entryNodeId = useRef<string | null>(null);
+
+  const navigateToNode = useCallback(
+    (targetNodeId: string, dir: 'left' | 'right' = 'left') => {
+      if (targetNodeId === currentNodeId) return;
+      if (transitionTimeout.current) clearTimeout(transitionTimeout.current);
+      setTransitioning(true);
+      setDirection(dir);
+      transitionTimeout.current = setTimeout(() => {
+        setCurrentNodeId(targetNodeId);
+        setTransitioning(false);
+        transitionTimeout.current = null;
+      }, 200);
+    },
+    [currentNodeId]
+  );
 
   useEffect(() => {
     if (!projectId) return;
@@ -60,6 +79,7 @@ export function PreviewPage() {
           ) || (diagram.nodes || [])[0];
         if (entryNode) {
           setCurrentNodeId(entryNode.id);
+          entryNodeId.current = entryNode.id;
         }
 
         // Load entries for each datasource
@@ -94,7 +114,7 @@ export function PreviewPage() {
   const handleAction = useCallback(
     (action: { type: string; datasourceId?: string; entryId?: string; values?: Record<string, any> }) => {
       if (action.type === 'NAVIGATE' && action.values?.nodeId) {
-        setCurrentNodeId(action.values.nodeId);
+        navigateToNode(action.values.nodeId, 'left');
         return;
       }
 
@@ -121,7 +141,7 @@ export function PreviewPage() {
         return;
       }
     },
-    []
+    [navigateToNode]
   );
 
   const currentNode = nodes.find((n) => n.id === currentNodeId);
@@ -155,6 +175,17 @@ export function PreviewPage() {
           <Separator orientation="vertical" className="h-5" />
           <span className="font-semibold">{projectName}</span>
           <Badge variant="secondary">Preview</Badge>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-1.5 text-muted-foreground"
+            onClick={() => {
+              if (entryNodeId.current) navigateToNode(entryNodeId.current, 'right');
+            }}
+          >
+            <RotateCcw className="h-3.5 w-3.5" />
+            Reset
+          </Button>
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -201,7 +232,7 @@ export function PreviewPage() {
                   ? 'bg-primary/10 text-primary font-medium'
                   : 'text-foreground hover:bg-secondary'
               )}
-              onClick={() => setCurrentNodeId(node.id)}
+              onClick={() => navigateToNode(node.id, 'left')}
             >
               {node.data.label}
             </button>
@@ -211,14 +242,26 @@ export function PreviewPage() {
         {/* Preview area */}
         <div className="flex-1 flex items-center justify-center bg-secondary p-6">
           <DeviceFrame breakpoint={breakpoint} backgroundColor={screenDef.backgroundColor}>
-            <PreviewRuntime
-              rootComponents={screenDef.rootComponents || []}
-              backgroundColor={screenDef.backgroundColor}
-              breakpoint={breakpoint}
-              datasourceData={datasourceData}
-              onNavigate={(nodeId: string) => setCurrentNodeId(nodeId)}
-              onAction={handleAction}
-            />
+            <div
+              style={{
+                transition: 'transform 0.2s ease-out, opacity 0.2s ease-out',
+                transform: transitioning
+                  ? direction === 'left'
+                    ? 'translateX(-20px)'
+                    : 'translateX(20px)'
+                  : 'translateX(0)',
+                opacity: transitioning ? 0 : 1,
+              }}
+            >
+              <PreviewRuntime
+                rootComponents={screenDef.rootComponents || []}
+                backgroundColor={screenDef.backgroundColor}
+                breakpoint={breakpoint}
+                datasourceData={datasourceData}
+                onNavigate={(nodeId: string) => navigateToNode(nodeId, 'left')}
+                onAction={handleAction}
+              />
+            </div>
           </DeviceFrame>
         </div>
       </div>

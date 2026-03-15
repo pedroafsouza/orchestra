@@ -140,12 +140,14 @@ export function OrchestraNode({ id, data }: NodeProps) {
         </div>
       )}
 
-      {/* Bottom info bar */}
-      <div className="px-4 pb-2.5 pt-1 flex items-center gap-2">
-        <span className="text-[10px] text-muted-foreground">
-          {nodeData.actions.length > 0 ? `${nodeData.actions.length} action${nodeData.actions.length > 1 ? 's' : ''}` : 'No actions'}
-        </span>
-      </div>
+      {/* Bottom info bar — only show when there are actions */}
+      {nodeData.actions.length > 0 && (
+        <div className="px-4 pb-2.5 pt-1 flex items-center gap-2">
+          <span className="text-[10px] text-muted-foreground">
+            {nodeData.actions.length} action{nodeData.actions.length > 1 ? 's' : ''}
+          </span>
+        </div>
+      )}
 
       <Handle
         type="source"

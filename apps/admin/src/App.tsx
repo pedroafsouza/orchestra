@@ -8,6 +8,7 @@ import { SettingsPage } from '@/pages/SettingsPage';
 import { PreviewPage } from '@/pages/PreviewPage';
 import { useThemeStore } from '@/store/themeStore';
 import { Toaster } from '@/components/ui/toaster';
+import { KeyboardShortcuts } from '@/components/KeyboardShortcuts';
 
 export default function App() {
   const theme = useThemeStore((s) => s.theme);
@@ -36,6 +37,7 @@ export default function App() {
         </Routes>
       </BrowserRouter>
       <Toaster />
+      <KeyboardShortcuts />
     </>
   );
 }

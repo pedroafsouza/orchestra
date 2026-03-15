@@ -1,8 +1,22 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { ArrowLeft, Plus, Trash2, X } from 'lucide-react';
+import {
+  ArrowLeft,
+  Plus,
+  Trash2,
+  X,
+  Database,
+  Search,
+  Type,
+  Hash,
+  ToggleLeft,
+  Calendar,
+  Image,
+  FileText,
+  Link,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -17,6 +31,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import type { DatasourceField, DatasourceFieldType } from '@orchestra/shared';
 
 interface Datasource {
@@ -41,6 +56,16 @@ const FIELD_TYPES: DatasourceFieldType[] = [
   'url',
 ];
 
+const FIELD_TYPE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  text: Type,
+  number: Hash,
+  boolean: ToggleLeft,
+  date: Calendar,
+  image_url: Image,
+  rich_text: FileText,
+  url: Link,
+};
+
 export function DatasourcesPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
@@ -48,6 +73,7 @@ export function DatasourcesPage() {
   const [selectedDs, setSelectedDs] = useState<Datasource | null>(null);
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState('');
@@ -61,6 +87,21 @@ export function DatasourcesPage() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [projectId]);
+
+  // Reset search when switching datasources
+  useEffect(() => {
+    setSearchQuery('');
+  }, [selectedDs?.id]);
+
+  const filteredEntries = useMemo(() => {
+    if (!searchQuery.trim()) return entries;
+    const query = searchQuery.toLowerCase();
+    return entries.filter((entry) =>
+      Object.values(entry.data).some((value) =>
+        String(value ?? '').toLowerCase().includes(query)
+      )
+    );
+  }, [entries, searchQuery]);
 
   const loadEntries = async (ds: Datasource) => {
     setSelectedDs(ds);
@@ -279,32 +320,56 @@ export function DatasourcesPage() {
           {selectedDs ? (
             <>
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold">{selectedDs.name}</h2>
+                <div className="flex items-center gap-3">
+                  <h2 className="text-lg font-semibold">{selectedDs.name}</h2>
+                  <Badge variant="secondary">
+                    {entries.length} {entries.length === 1 ? 'row' : 'rows'}
+                  </Badge>
+                </div>
                 <Button size="sm" className="gap-1.5" onClick={handleAddEntry}>
                   <Plus className="w-3 h-3" />
                   Add Entry
                 </Button>
               </div>
 
+              {/* Search bar */}
+              <div className="relative mb-4">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  className="pl-9"
+                  placeholder="Search entries..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+
               <Card>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      {(selectedDs.fields as DatasourceField[]).map((f) => (
-                        <TableHead
-                          key={f.key}
-                          className="text-xs font-semibold uppercase"
-                        >
-                          {f.label}
-                        </TableHead>
-                      ))}
+                      {(selectedDs.fields as DatasourceField[]).map((f) => {
+                        const IconComponent = FIELD_TYPE_ICONS[f.type];
+                        return (
+                          <TableHead
+                            key={f.key}
+                            className="text-xs font-semibold uppercase"
+                          >
+                            <div className="flex items-center gap-1.5">
+                              {IconComponent && (
+                                <IconComponent className="w-3.5 h-3.5 text-muted-foreground" />
+                              )}
+                              {f.label}
+                            </div>
+                          </TableHead>
+                        );
+                      })}
                       <TableHead className="text-right w-20 text-xs font-semibold uppercase">
                         Actions
                       </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {entries.map((entry) => (
+                    {filteredEntries.map((entry) => (
                       <TableRow key={entry.id}>
                         {(selectedDs.fields as DatasourceField[]).map((f) => (
                           <TableCell key={f.key} className="py-2">
@@ -367,24 +432,60 @@ export function DatasourcesPage() {
                         </TableCell>
                       </TableRow>
                     ))}
+                    {filteredEntries.length === 0 && entries.length > 0 && (
+                      <TableRow>
+                        <TableCell
+                          colSpan={(selectedDs.fields as DatasourceField[]).length + 1}
+                          className="text-center py-8 text-muted-foreground"
+                        >
+                          No entries match your search.
+                        </TableCell>
+                      </TableRow>
+                    )}
                     {entries.length === 0 && (
                       <TableRow>
                         <TableCell
                           colSpan={(selectedDs.fields as DatasourceField[]).length + 1}
                           className="text-center py-8 text-muted-foreground"
                         >
-                          No entries yet. Click "+ Add Entry" to create one.
+                          No entries yet. Click &quot;+ Add Entry&quot; to create one.
                         </TableCell>
                       </TableRow>
                     )}
+                    {/* Inline add row */}
+                    <TableRow className="border-dashed border-t-2 hover:bg-muted/50">
+                      <TableCell
+                        colSpan={(selectedDs.fields as DatasourceField[]).length + 1}
+                        className="py-1"
+                      >
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="w-full gap-1.5 text-muted-foreground hover:text-foreground"
+                          onClick={handleAddEntry}
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          New row
+                        </Button>
+                      </TableCell>
+                    </TableRow>
                   </TableBody>
                 </Table>
               </Card>
             </>
           ) : (
-            <div className="text-center py-20 text-muted-foreground">
-              <p className="text-lg mb-2">Select a collection</p>
-              <p className="text-sm">Or create a new one to start managing data.</p>
+            <div className="flex flex-col items-center justify-center py-32 text-center">
+              <div className="rounded-full bg-muted p-6 mb-6">
+                <Database className="w-12 h-12 text-muted-foreground" />
+              </div>
+              <h2 className="text-xl font-semibold mb-2">Select a collection</h2>
+              <p className="text-sm text-muted-foreground mb-6">
+                Choose from the sidebar or create a new one
+              </p>
+              <Button className="gap-1.5" onClick={() => setShowCreate(true)}>
+                <Plus className="w-4 h-4" />
+                Create Collection
+              </Button>
             </div>
           )}
         </div>

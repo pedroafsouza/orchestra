@@ -4,8 +4,7 @@ import { useScreenStore } from './screenStore';
 import { ComponentPalette } from './ComponentPalette';
 import { DevicePreview } from './DevicePreview';
 import { StyleEditor } from './StyleEditor';
-import { ComponentTree } from './ComponentTree';
-import { X, Save } from 'lucide-react';
+import { X, Save, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -64,35 +63,36 @@ export function ScreenBuilderModal({ nodeId, onClose }: Props) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
       <div className="w-[98vw] h-[96vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden border
         bg-background border-border">
-        {/* Header */}
-        <div className="h-14 flex items-center justify-between px-5 shrink-0 border-b
+        {/* Header — Retool-style toolbar */}
+        <div className="h-12 flex items-center justify-between px-4 shrink-0 border-b
           bg-card border-border">
           <div className="flex items-center gap-3">
-            <h2 className="text-sm font-semibold text-foreground">
-              Screen Builder
-            </h2>
-            <span className="text-xs text-muted-foreground">
-              {nodeData.label} ({nodeData.nodeType})
+            <span className="text-sm font-semibold text-foreground">
+              {nodeData.label}
+            </span>
+            <span className="text-[11px] text-muted-foreground px-2 py-0.5 rounded bg-secondary">
+              {nodeData.nodeType}
             </span>
           </div>
-          <div className="flex gap-3">
-            <Button variant="outline" size="default" onClick={onClose}>
-              <X className="w-4 h-4 mr-1.5" />
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={onClose}>
+              <X className="w-4 h-4 mr-1" />
               Cancel
             </Button>
-            <Button size="default" onClick={handleSave}>
-              <Save className="w-4 h-4 mr-1.5" />
-              Save Screen
+            <Button variant="outline" size="sm" disabled>
+              <Eye className="w-4 h-4 mr-1" />
+              Preview
+            </Button>
+            <Button size="sm" onClick={handleSave}>
+              <Save className="w-4 h-4 mr-1" />
+              Save
             </Button>
           </div>
         </div>
 
-        {/* Body */}
+        {/* Body — 3-panel layout */}
         <div className="flex flex-1 overflow-hidden">
-          <div className="flex flex-col w-44 shrink-0">
-            <ComponentPalette />
-            <ComponentTree />
-          </div>
+          <ComponentPalette />
           <DevicePreview />
           <StyleEditor />
         </div>

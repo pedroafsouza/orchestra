@@ -1,18 +1,69 @@
+import { useState } from 'react';
 import { useScreenStore } from './screenStore';
 import { COMPONENT_DEFAULTS, type ScreenComponentType } from '@orchestra/shared';
 import type { Breakpoint, ComponentStyle } from '@orchestra/shared';
 import { ActionTrigger, ActionType } from '@orchestra/shared';
 import { useFlowStore } from '@/store/flowStore';
-import { Trash2, Plus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Trash2, Plus, ChevronDown, ChevronRight, MoreHorizontal } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
-const selectCls = 'h-8 w-full rounded-md border border-input bg-background px-2 text-sm';
+const selectCls = 'h-8 w-full rounded-md border border-input bg-background px-2 text-xs';
 
-function ColorInput({
+/* ── Collapsible section ── */
+function Section({
+  title,
+  defaultOpen = true,
+  children,
+  actions,
+}: {
+  title: string;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+  actions?: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+
+  return (
+    <div className="border-b border-border">
+      <button
+        className="flex items-center justify-between w-full px-4 py-2.5 hover:bg-secondary/50 transition-colors"
+        onClick={() => setOpen(!open)}
+      >
+        <span className="text-[11px] font-semibold text-foreground">{title}</span>
+        <div className="flex items-center gap-1">
+          {actions}
+          {open ? (
+            <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+          ) : (
+            <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
+          )}
+        </div>
+      </button>
+      {open && <div className="px-4 pb-3">{children}</div>}
+    </div>
+  );
+}
+
+/* ── Field row (label + value) ── */
+function FieldRow({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-center gap-3 mb-2">
+      <Label className="w-24 shrink-0 text-[11px] text-muted-foreground">{label}</Label>
+      <div className="flex-1 min-w-0">{children}</div>
+    </div>
+  );
+}
+
+/* ── Inline color input ── */
+function ColorField({
   label,
   value,
   onChange,
@@ -22,58 +73,27 @@ function ColorInput({
   onChange: (v: string) => void;
 }) {
   return (
-    <div className="flex items-center gap-2">
-      <Label className="w-20 shrink-0 text-[10px] text-muted-foreground">{label}</Label>
-      <input
-        type="color"
-        value={value || '#000000'}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-6 h-6 rounded border border-input cursor-pointer"
-      />
-      <Input
-        type="text"
-        value={value || ''}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder="#hex"
-        className="flex-1 h-7 px-2 text-xs"
-      />
-    </div>
+    <FieldRow label={label}>
+      <div className="flex items-center gap-2">
+        <input
+          type="color"
+          value={value || '#000000'}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-7 h-7 rounded border border-input cursor-pointer shrink-0"
+        />
+        <Input
+          type="text"
+          value={value || ''}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="#hex"
+          className="flex-1 h-8 px-2 text-xs"
+        />
+      </div>
+    </FieldRow>
   );
 }
 
-function NumberInput({
-  label,
-  value,
-  onChange,
-  min,
-  max,
-  step,
-}: {
-  label: string;
-  value: number | undefined;
-  onChange: (v: number | undefined) => void;
-  min?: number;
-  max?: number;
-  step?: number;
-}) {
-  return (
-    <div className="flex items-center gap-2">
-      <Label className="w-20 shrink-0 text-[10px] text-muted-foreground">{label}</Label>
-      <Input
-        type="number"
-        value={value ?? ''}
-        onChange={(e) =>
-          onChange(e.target.value === '' ? undefined : Number(e.target.value))
-        }
-        min={min}
-        max={max}
-        step={step}
-        className="flex-1 h-7 px-2 text-xs"
-      />
-    </div>
-  );
-}
-
+/* ── Spacing grid ── */
 function SpacingEditor({
   label,
   value,
@@ -90,10 +110,10 @@ function SpacingEditor({
 
   return (
     <div className="mb-2">
-      <p className="text-[10px] text-muted-foreground mb-1">{label}</p>
-      <div className="grid grid-cols-4 gap-1">
+      <p className="text-[11px] text-muted-foreground mb-1.5">{label}</p>
+      <div className="grid grid-cols-4 gap-1.5">
         {(['top', 'right', 'bottom', 'left'] as const).map((side) => (
-          <div key={side} className="flex flex-col items-center">
+          <div key={side} className="flex flex-col items-center gap-0.5">
             <Input
               type="number"
               value={(v as any)[side] ?? ''}
@@ -102,7 +122,7 @@ function SpacingEditor({
               }
               className="w-full h-7 px-1 text-[10px] text-center"
             />
-            <span className="text-[8px] text-muted-foreground">{side[0].toUpperCase()}</span>
+            <span className="text-[9px] text-muted-foreground uppercase">{side[0]}</span>
           </div>
         ))}
       </div>
@@ -161,314 +181,384 @@ export function StyleEditor() {
     selected?.type === 'checkbox' ||
     selected?.type === 'input';
 
-  const sectionTitle = 'text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2';
+  // No component selected — show screen-level settings
+  if (!selected) {
+    return (
+      <div className="w-[300px] shrink-0 border-l border-border bg-card flex flex-col h-full">
+        <div className="px-4 py-3 border-b border-border">
+          <h3 className="text-xs font-semibold text-foreground">Screen</h3>
+        </div>
+        <div className="px-4 py-3">
+          <ColorField label="Background" value={backgroundColor} onChange={setBackgroundColor} />
+          <p className="text-xs text-muted-foreground italic mt-4">
+            Select a component on the canvas to edit its properties.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const componentLabel = COMPONENT_DEFAULTS[selected.type]?.label || selected.type;
 
   return (
-    <ScrollArea className="w-56 border-l border bg-card">
-      <div className="p-2.5">
-        {/* Screen background */}
-        <div className="mb-4 pb-3">
-          <h3 className={sectionTitle}>Screen</h3>
-          <ColorInput label="Background" value={backgroundColor} onChange={setBackgroundColor} />
+    <div className="w-[300px] shrink-0 border-l border-border bg-card flex flex-col h-full">
+      {/* Component header */}
+      <div className="px-4 py-3 border-b border-border flex items-center justify-between shrink-0">
+        <h3 className="text-xs font-semibold text-foreground">{componentLabel}</h3>
+        <div className="flex items-center gap-1">
+          <button
+            className="p-1 rounded hover:bg-secondary text-destructive hover:text-destructive/80 transition-colors"
+            onClick={() => removeComponent(selected.id)}
+            title="Delete component"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+          <button className="p-1 rounded hover:bg-secondary text-muted-foreground transition-colors">
+            <MoreHorizontal className="w-3.5 h-3.5" />
+          </button>
         </div>
-        <Separator className="mb-4" />
+      </div>
 
-        {!selected ? (
-          <p className="text-xs text-muted-foreground italic">
-            Click a component in the preview to edit it.
-          </p>
-        ) : (
-          <>
-            {/* Component info */}
-            <div className="mb-3 pb-2">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xs font-semibold text-foreground">
-                  {COMPONENT_DEFAULTS[selected.type]?.label || selected.type}
-                </h3>
-                <button
-                  className="text-destructive hover:text-destructive/80"
-                  onClick={() => removeComponent(selected.id)}
-                >
-                  <Trash2 className="w-3 h-3" />
-                </button>
-              </div>
-              <p className="text-[9px] text-muted-foreground font-mono">{selected.id}</p>
-            </div>
-            <Separator className="mb-3" />
+      <ScrollArea className="flex-1">
+        {/* ── Content section ── */}
+        <Section title="Content">
+          {/* Component ID */}
+          <FieldRow label="ID">
+            <Input
+              value={selected.id}
+              readOnly
+              className="h-8 px-2 text-xs font-mono bg-secondary/50"
+            />
+          </FieldRow>
 
-            {/* Breakpoint indicator */}
-            <div className="mb-3">
-              <p className="text-[10px] text-muted-foreground">
-                Editing styles for:{' '}
-                <span className="text-primary font-medium">{editingBreakpoint}</span>
-              </p>
-            </div>
+          {/* Breakpoint indicator */}
+          <FieldRow label="Breakpoint">
+            <span className="text-xs text-primary font-medium capitalize">{editingBreakpoint}</span>
+          </FieldRow>
 
-            {/* Props editor */}
-            <div className="mb-4">
-              <h4 className={sectionTitle}>Properties</h4>
-              {Object.entries(selected.props).map(([key, value]) => {
-                // Special: navigateTo on buttons -> show node selector
-                if (key === 'navigateTo' && selected.type === 'button') {
-                  return (
-                    <div key={key} className="mb-1.5">
-                      <Label className="text-[10px] text-muted-foreground">Navigate To</Label>
-                      <select
-                        value={value || ''}
-                        onChange={(e) =>
-                          updateComponentProps(selected.id, { navigateTo: e.target.value })
-                        }
-                        className={selectCls}
-                      >
-                        <option value="">None</option>
-                        {flowNodes.map((n) => (
-                          <option key={n.id} value={n.id}>
-                            {(n.data as any).label} ({n.id})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  );
-                }
-
-                return (
-                  <div key={key} className="mb-1.5">
-                    <Label className="text-[10px] text-muted-foreground">{key}</Label>
-                    {typeof value === 'boolean' ? (
-                      <label className="flex items-center gap-1.5">
-                        <input
-                          type="checkbox"
-                          checked={value}
-                          onChange={(e) =>
-                            updateComponentProps(selected.id, { [key]: e.target.checked })
-                          }
-                          className="rounded"
-                        />
-                        <span className="text-xs text-foreground">{key}</span>
-                      </label>
-                    ) : typeof value === 'number' ? (
-                      <Input
-                        type="number"
-                        value={value}
-                        onChange={(e) =>
-                          updateComponentProps(selected.id, { [key]: Number(e.target.value) })
-                        }
-                        className="w-full h-7 px-2 text-xs"
-                      />
-                    ) : typeof value === 'string' ? (
-                      <Input
-                        type="text"
-                        value={value}
-                        onChange={(e) =>
-                          updateComponentProps(selected.id, { [key]: e.target.value })
-                        }
-                        className="w-full h-7 px-2 text-xs"
-                      />
-                    ) : (
-                      <Input
-                        type="text"
-                        value={JSON.stringify(value)}
-                        onChange={(e) => {
-                          try {
-                            updateComponentProps(selected.id, { [key]: JSON.parse(e.target.value) });
-                          } catch {
-                            updateComponentProps(selected.id, { [key]: e.target.value });
-                          }
-                        }}
-                        className="w-full h-7 px-2 text-xs"
-                      />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Style editor */}
-            <div className="mb-4">
-              <h4 className={sectionTitle}>Style</h4>
-              <div className="space-y-2">
-                <ColorInput label="Background" value={currentStyle.backgroundColor || ''} onChange={(v) => updateStyle({ backgroundColor: v })} />
-                <ColorInput label="Text Color" value={currentStyle.textColor || ''} onChange={(v) => updateStyle({ textColor: v })} />
-                <NumberInput label="Font Size" value={currentStyle.fontSize} onChange={(v) => updateStyle({ fontSize: v })} min={8} max={96} />
-                <div className="flex items-center gap-2">
-                  <Label className="w-20 shrink-0 text-[10px] text-muted-foreground">Weight</Label>
+          {/* Component props */}
+          {Object.entries(selected.props).map(([key, value]) => {
+            // navigateTo on buttons → node selector
+            if (key === 'navigateTo' && selected.type === 'button') {
+              return (
+                <FieldRow key={key} label="Navigate To">
                   <select
-                    value={currentStyle.fontWeight || ''}
-                    onChange={(e) => updateStyle({ fontWeight: (e.target.value || undefined) as any })}
+                    value={value || ''}
+                    onChange={(e) =>
+                      updateComponentProps(selected.id, { navigateTo: e.target.value })
+                    }
                     className={selectCls}
                   >
-                    <option value="">Default</option>
-                    <option value="normal">Normal</option>
-                    <option value="bold">Bold</option>
-                    {['100','200','300','400','500','600','700','800','900'].map((w) => (
-                      <option key={w} value={w}>{w}</option>
+                    <option value="">None</option>
+                    {flowNodes.map((n) => (
+                      <option key={n.id} value={n.id}>
+                        {(n.data as any).label} ({n.id})
+                      </option>
                     ))}
                   </select>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Label className="w-20 shrink-0 text-[10px] text-muted-foreground">Align</Label>
-                  <select
-                    value={currentStyle.textAlign || ''}
-                    onChange={(e) => updateStyle({ textAlign: (e.target.value || undefined) as any })}
-                    className={selectCls}
-                  >
-                    <option value="">Default</option>
-                    <option value="left">Left</option>
-                    <option value="center">Center</option>
-                    <option value="right">Right</option>
-                  </select>
-                </div>
-                <NumberInput label="Opacity" value={currentStyle.opacity} onChange={(v) => updateStyle({ opacity: v })} min={0} max={1} step={0.1} />
+                </FieldRow>
+              );
+            }
+
+            const labelText = key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1');
+
+            if (typeof value === 'boolean') {
+              return (
+                <FieldRow key={key} label={labelText}>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={value}
+                      onChange={(e) =>
+                        updateComponentProps(selected.id, { [key]: e.target.checked })
+                      }
+                      className="rounded"
+                    />
+                    <span className="text-xs text-foreground">{value ? 'On' : 'Off'}</span>
+                  </label>
+                </FieldRow>
+              );
+            }
+
+            if (typeof value === 'number') {
+              return (
+                <FieldRow key={key} label={labelText}>
+                  <Input
+                    type="number"
+                    value={value}
+                    onChange={(e) =>
+                      updateComponentProps(selected.id, { [key]: Number(e.target.value) })
+                    }
+                    className="h-8 px-2 text-xs"
+                  />
+                </FieldRow>
+              );
+            }
+
+            if (typeof value === 'string') {
+              return (
+                <FieldRow key={key} label={labelText}>
+                  <Input
+                    type="text"
+                    value={value}
+                    onChange={(e) =>
+                      updateComponentProps(selected.id, { [key]: e.target.value })
+                    }
+                    className="h-8 px-2 text-xs"
+                  />
+                </FieldRow>
+              );
+            }
+
+            return (
+              <FieldRow key={key} label={labelText}>
+                <Input
+                  type="text"
+                  value={JSON.stringify(value)}
+                  onChange={(e) => {
+                    try {
+                      updateComponentProps(selected.id, { [key]: JSON.parse(e.target.value) });
+                    } catch {
+                      updateComponentProps(selected.id, { [key]: e.target.value });
+                    }
+                  }}
+                  className="h-8 px-2 text-xs"
+                />
+              </FieldRow>
+            );
+          })}
+
+          {/* Add children (for containers) */}
+          {canHaveChildren && (
+            <div className="mt-3 pt-3 border-t border-border">
+              <p className="text-[11px] text-muted-foreground mb-2">Add child component</p>
+              <div className="grid grid-cols-3 gap-1.5">
+                {(['text', 'button', 'image', 'input', 'checkbox', 'icon', 'card', 'chip', 'badge'] as ScreenComponentType[]).map(
+                  (t) => (
+                    <button
+                      key={t}
+                      className="text-[10px] px-2 py-1.5 rounded-md border border-border hover:bg-secondary/60 text-muted-foreground hover:text-foreground transition-colors"
+                      onClick={() => addChildComponent(selected.id, t)}
+                    >
+                      {COMPONENT_DEFAULTS[t].label}
+                    </button>
+                  )
+                )}
               </div>
             </div>
+          )}
+        </Section>
 
-            {/* Spacing */}
-            <div className="mb-4">
-              <h4 className={sectionTitle}>Spacing</h4>
-              <SpacingEditor label="Padding" value={currentStyle.padding} onChange={(v) => updateStyle({ padding: v })} />
-              <SpacingEditor label="Margin" value={currentStyle.margin} onChange={(v) => updateStyle({ margin: v })} />
-            </div>
+        {/* ── Interaction section ── */}
+        {canHaveActions && (
+          <Section
+            title="Interaction"
+            actions={
+              <button
+                className="p-0.5 text-muted-foreground hover:text-foreground"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const actions = [...(selected.actions || [])];
+                  actions.push({ trigger: 'onPress', type: 'NAVIGATE', payload: {} });
+                  updateComponentActions(selected.id, actions);
+                }}
+                title="Add event handler"
+              >
+                <Plus className="w-3.5 h-3.5" />
+              </button>
+            }
+          >
+            <FieldRow label="Event handlers">
+              <span className="text-xs text-muted-foreground">
+                {(selected.actions || []).length || 'None'}
+              </span>
+            </FieldRow>
 
-            {/* Border */}
-            <div className="mb-4">
-              <h4 className={sectionTitle}>Border</h4>
-              <NumberInput label="Width" value={currentStyle.border?.width} onChange={(v) => updateStyle({ border: { ...currentStyle.border, width: v } })} min={0} />
-              <div className="mt-1">
-                <ColorInput label="Color" value={currentStyle.border?.color || ''} onChange={(v) => updateStyle({ border: { ...currentStyle.border, color: v } })} />
-              </div>
-              <div className="mt-1">
-                <NumberInput label="Radius" value={currentStyle.border?.radius} onChange={(v) => updateStyle({ border: { ...currentStyle.border, radius: v } })} min={0} />
-              </div>
-            </div>
-
-            {/* Shadow */}
-            <div className="mb-4">
-              <h4 className={sectionTitle}>Shadow</h4>
-              <NumberInput label="Offset X" value={currentStyle.shadow?.offsetX} onChange={(v) => updateStyle({ shadow: { ...currentStyle.shadow, offsetX: v } })} />
-              <div className="mt-1"><NumberInput label="Offset Y" value={currentStyle.shadow?.offsetY} onChange={(v) => updateStyle({ shadow: { ...currentStyle.shadow, offsetY: v } })} /></div>
-              <div className="mt-1"><NumberInput label="Blur" value={currentStyle.shadow?.blur} onChange={(v) => updateStyle({ shadow: { ...currentStyle.shadow, blur: v } })} min={0} /></div>
-              <div className="mt-1"><ColorInput label="Color" value={currentStyle.shadow?.color || ''} onChange={(v) => updateStyle({ shadow: { ...currentStyle.shadow, color: v } })} /></div>
-            </div>
-
-            {/* Add child (for containers) */}
-            {canHaveChildren && (
-              <div className="mb-4">
-                <Separator className="mb-3" />
-                <h4 className={sectionTitle}>Add Child</h4>
-                <div className="grid grid-cols-3 gap-1">
-                  {(['text', 'button', 'image', 'input', 'checkbox', 'icon', 'card', 'chip', 'badge'] as ScreenComponentType[]).map(
-                    (t) => (
-                      <Button
-                        key={t}
-                        variant="secondary"
-                        size="xs"
-                        className="text-[10px]"
-                        onClick={() => addChildComponent(selected.id, t)}
-                      >
-                        {COMPONENT_DEFAULTS[t].label}
-                      </Button>
-                    )
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Actions editor */}
-            {canHaveActions && (
-              <div className="mb-4">
-                <Separator className="mb-3" />
+            {(selected.actions || []).map((action: any, idx: number) => (
+              <div
+                key={idx}
+                className="mb-2 p-3 rounded-lg border border-border bg-secondary/30"
+              >
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className={sectionTitle + ' mb-0'}>Actions</h4>
+                  <span className="text-[10px] font-mono text-muted-foreground">Handler #{idx + 1}</span>
                   <button
-                    className="text-primary hover:text-primary/80"
+                    className="text-destructive hover:text-destructive/80"
                     onClick={() => {
                       const actions = [...(selected.actions || [])];
-                      actions.push({ trigger: 'onPress', type: 'NAVIGATE', payload: {} });
+                      actions.splice(idx, 1);
                       updateComponentActions(selected.id, actions);
                     }}
                   >
-                    <Plus className="w-3 h-3" />
+                    <Trash2 className="w-3 h-3" />
                   </button>
                 </div>
-                {(selected.actions || []).length === 0 && (
-                  <p className="text-[10px] text-muted-foreground italic">
-                    No actions configured.
-                  </p>
-                )}
-                {(selected.actions || []).map((action: any, idx: number) => (
-                  <div
-                    key={idx}
-                    className="mb-2 p-2 rounded-lg border bg-secondary"
+                <FieldRow label="Trigger">
+                  <select
+                    value={action.trigger || 'onPress'}
+                    onChange={(e) => {
+                      const actions = [...(selected.actions || [])];
+                      actions[idx] = { ...actions[idx], trigger: e.target.value };
+                      updateComponentActions(selected.id, actions);
+                    }}
+                    className={selectCls}
                   >
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-[9px] font-mono text-muted-foreground">#{idx + 1}</span>
-                      <button
-                        className="text-destructive hover:text-destructive/80"
-                        onClick={() => {
-                          const actions = [...(selected.actions || [])];
-                          actions.splice(idx, 1);
-                          updateComponentActions(selected.id, actions);
-                        }}
-                      >
-                        <Trash2 className="w-2.5 h-2.5" />
-                      </button>
-                    </div>
-                    <div className="mb-1">
-                      <Label className="text-[10px] text-muted-foreground">Trigger</Label>
-                      <select
-                        value={action.trigger || 'onPress'}
-                        onChange={(e) => {
-                          const actions = [...(selected.actions || [])];
-                          actions[idx] = { ...actions[idx], trigger: e.target.value };
-                          updateComponentActions(selected.id, actions);
-                        }}
-                        className={selectCls}
-                      >
-                        {ActionTrigger.options.map((t) => (
-                          <option key={t} value={t}>{t}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="mb-1">
-                      <Label className="text-[10px] text-muted-foreground">Type</Label>
-                      <select
-                        value={action.type || 'NAVIGATE'}
-                        onChange={(e) => {
-                          const actions = [...(selected.actions || [])];
-                          actions[idx] = { ...actions[idx], type: e.target.value };
-                          updateComponentActions(selected.id, actions);
-                        }}
-                        className={selectCls}
-                      >
-                        {ActionType.options.map((t) => (
-                          <option key={t} value={t}>{t}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <Label className="text-[10px] text-muted-foreground">Payload (JSON)</Label>
-                      <Input
-                        type="text"
-                        value={typeof action.payload === 'string' ? action.payload : JSON.stringify(action.payload || {})}
-                        onChange={(e) => {
-                          const actions = [...(selected.actions || [])];
-                          try {
-                            actions[idx] = { ...actions[idx], payload: JSON.parse(e.target.value) };
-                          } catch {
-                            actions[idx] = { ...actions[idx], payload: e.target.value };
-                          }
-                          updateComponentActions(selected.id, actions);
-                        }}
-                        className="w-full h-7 px-2 text-xs"
-                      />
-                    </div>
-                  </div>
-                ))}
+                    {ActionTrigger.options.map((t) => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                </FieldRow>
+                <FieldRow label="Type">
+                  <select
+                    value={action.type || 'NAVIGATE'}
+                    onChange={(e) => {
+                      const actions = [...(selected.actions || [])];
+                      actions[idx] = { ...actions[idx], type: e.target.value };
+                      updateComponentActions(selected.id, actions);
+                    }}
+                    className={selectCls}
+                  >
+                    {ActionType.options.map((t) => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                </FieldRow>
+                <FieldRow label="Payload">
+                  <Input
+                    type="text"
+                    value={typeof action.payload === 'string' ? action.payload : JSON.stringify(action.payload || {})}
+                    onChange={(e) => {
+                      const actions = [...(selected.actions || [])];
+                      try {
+                        actions[idx] = { ...actions[idx], payload: JSON.parse(e.target.value) };
+                      } catch {
+                        actions[idx] = { ...actions[idx], payload: e.target.value };
+                      }
+                      updateComponentActions(selected.id, actions);
+                    }}
+                    className="h-8 px-2 text-xs"
+                  />
+                </FieldRow>
               </div>
-            )}
-          </>
+            ))}
+          </Section>
         )}
-      </div>
-    </ScrollArea>
+
+        {/* ── Appearance section ── */}
+        <Section title="Appearance">
+          <ColorField label="Background" value={currentStyle.backgroundColor || ''} onChange={(v) => updateStyle({ backgroundColor: v })} />
+          <ColorField label="Text color" value={currentStyle.textColor || ''} onChange={(v) => updateStyle({ textColor: v })} />
+
+          <FieldRow label="Font size">
+            <Input
+              type="number"
+              value={currentStyle.fontSize ?? ''}
+              onChange={(e) => updateStyle({ fontSize: e.target.value === '' ? undefined : Number(e.target.value) })}
+              min={8}
+              max={96}
+              className="h-8 px-2 text-xs"
+            />
+          </FieldRow>
+
+          <FieldRow label="Weight">
+            <select
+              value={currentStyle.fontWeight || ''}
+              onChange={(e) => updateStyle({ fontWeight: (e.target.value || undefined) as any })}
+              className={selectCls}
+            >
+              <option value="">Default</option>
+              <option value="normal">Normal</option>
+              <option value="bold">Bold</option>
+              {['100','200','300','400','500','600','700','800','900'].map((w) => (
+                <option key={w} value={w}>{w}</option>
+              ))}
+            </select>
+          </FieldRow>
+
+          <FieldRow label="Align">
+            <select
+              value={currentStyle.textAlign || ''}
+              onChange={(e) => updateStyle({ textAlign: (e.target.value || undefined) as any })}
+              className={selectCls}
+            >
+              <option value="">Default</option>
+              <option value="left">Left</option>
+              <option value="center">Center</option>
+              <option value="right">Right</option>
+            </select>
+          </FieldRow>
+
+          <FieldRow label="Opacity">
+            <Input
+              type="number"
+              value={currentStyle.opacity ?? ''}
+              onChange={(e) => updateStyle({ opacity: e.target.value === '' ? undefined : Number(e.target.value) })}
+              min={0}
+              max={1}
+              step={0.1}
+              className="h-8 px-2 text-xs"
+            />
+          </FieldRow>
+        </Section>
+
+        {/* ── Spacing section ── */}
+        <Section title="Spacing" defaultOpen={false}>
+          <SpacingEditor label="Padding" value={currentStyle.padding} onChange={(v) => updateStyle({ padding: v })} />
+          <SpacingEditor label="Margin" value={currentStyle.margin} onChange={(v) => updateStyle({ margin: v })} />
+        </Section>
+
+        {/* ── Border section ── */}
+        <Section title="Border" defaultOpen={false}>
+          <FieldRow label="Width">
+            <Input
+              type="number"
+              value={currentStyle.border?.width ?? ''}
+              onChange={(e) => updateStyle({ border: { ...currentStyle.border, width: e.target.value === '' ? undefined : Number(e.target.value) } })}
+              min={0}
+              className="h-8 px-2 text-xs"
+            />
+          </FieldRow>
+          <ColorField label="Color" value={currentStyle.border?.color || ''} onChange={(v) => updateStyle({ border: { ...currentStyle.border, color: v } })} />
+          <FieldRow label="Radius">
+            <Input
+              type="number"
+              value={currentStyle.border?.radius ?? ''}
+              onChange={(e) => updateStyle({ border: { ...currentStyle.border, radius: e.target.value === '' ? undefined : Number(e.target.value) } })}
+              min={0}
+              className="h-8 px-2 text-xs"
+            />
+          </FieldRow>
+        </Section>
+
+        {/* ── Shadow section ── */}
+        <Section title="Shadow" defaultOpen={false}>
+          <FieldRow label="Offset X">
+            <Input
+              type="number"
+              value={currentStyle.shadow?.offsetX ?? ''}
+              onChange={(e) => updateStyle({ shadow: { ...currentStyle.shadow, offsetX: e.target.value === '' ? undefined : Number(e.target.value) } })}
+              className="h-8 px-2 text-xs"
+            />
+          </FieldRow>
+          <FieldRow label="Offset Y">
+            <Input
+              type="number"
+              value={currentStyle.shadow?.offsetY ?? ''}
+              onChange={(e) => updateStyle({ shadow: { ...currentStyle.shadow, offsetY: e.target.value === '' ? undefined : Number(e.target.value) } })}
+              className="h-8 px-2 text-xs"
+            />
+          </FieldRow>
+          <FieldRow label="Blur">
+            <Input
+              type="number"
+              value={currentStyle.shadow?.blur ?? ''}
+              onChange={(e) => updateStyle({ shadow: { ...currentStyle.shadow, blur: e.target.value === '' ? undefined : Number(e.target.value) } })}
+              min={0}
+              className="h-8 px-2 text-xs"
+            />
+          </FieldRow>
+          <ColorField label="Color" value={currentStyle.shadow?.color || ''} onChange={(v) => updateStyle({ shadow: { ...currentStyle.shadow, color: v } })} />
+        </Section>
+      </ScrollArea>
+    </div>
   );
 }

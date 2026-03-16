@@ -10,3 +10,6 @@ coverage/
 *.log
 .DS_Store
 mcp-configs/
+.mcp.json
+out/
+next-env.d.ts

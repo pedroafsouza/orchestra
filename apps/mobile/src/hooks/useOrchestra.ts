@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { Platform } from 'react-native';
 import { useOrchestraStore } from '../store/orchestraStore';
 import type { OrchestraAction } from '@orchestra/shared';
@@ -11,15 +11,27 @@ const CLIENT_CAPABILITIES = {
   supported: ['mapbox', 'camera'],
 };
 
-export function useOrchestra() {
-  const store = useOrchestraStore();
+const POLL_INTERVAL = 5000;
 
-  // Fetch flow on mount
+interface UseOrchestraOptions {
+  projectGuid?: string;
+}
+
+export function useOrchestra(options: UseOrchestraOptions = {}) {
+  const store = useOrchestraStore();
+  const { projectGuid } = options;
+  const flowVersionRef = useRef<number | null>(null);
+
+  // Fetch flow on mount (and poll for updates when projectGuid is set)
   useEffect(() => {
-    async function fetchFlow() {
-      store.setLoading(true);
+    const endpoint = projectGuid
+      ? `${API_URL}/api/flow/${projectGuid}/latest`
+      : `${API_URL}/api/flow/latest`;
+
+    async function fetchFlow(isPolling = false) {
+      if (!isPolling) store.setLoading(true);
       try {
-        const res = await fetch(`${API_URL}/api/flow/latest`, {
+        const res = await fetch(endpoint, {
           headers: {
             'X-Client-Capabilities': JSON.stringify(
               CLIENT_CAPABILITIES.supported
@@ -31,18 +43,37 @@ export function useOrchestra() {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
         const data = await res.json();
-        store.setFlow(data.flow, data.config);
+
+        // Only update if flow version changed (avoid unnecessary re-renders)
+        if (isPolling && flowVersionRef.current === data.flow?.version) {
+          return;
+        }
+
+        flowVersionRef.current = data.flow?.version ?? null;
+        store.setFlow(data.flow, data.config, data.datasources);
       } catch (err) {
-        store.setError(
-          err instanceof Error ? err.message : 'Failed to fetch flow'
-        );
+        if (!isPolling) {
+          store.setError(
+            err instanceof Error ? err.message : 'Failed to fetch flow'
+          );
+        }
       } finally {
-        store.setLoading(false);
+        if (!isPolling) store.setLoading(false);
       }
     }
 
     fetchFlow();
-  }, []);
+
+    // Poll for updates when in preview mode
+    let interval: ReturnType<typeof setInterval> | null = null;
+    if (projectGuid) {
+      interval = setInterval(() => fetchFlow(true), POLL_INTERVAL);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [projectGuid]);
 
   const executeAction = useCallback(
     async (action: OrchestraAction) => {
@@ -132,6 +163,7 @@ export function useOrchestra() {
     currentNode: store.getCurrentNode(),
     context: store.context,
     config: store.config,
+    datasources: store.datasources,
     loading: store.loading,
     error: store.error,
     executeAction,

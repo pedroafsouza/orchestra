@@ -256,7 +256,7 @@ export function ProjectsPage() {
   }, []);
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/templates`)
+    fetch(`${import.meta.env.VITE_API_URL || ''}/api/templates`)
       .then((r) => r.json())
       .then(setTemplates)
       .catch((err) => console.error('Failed to fetch templates:', err));

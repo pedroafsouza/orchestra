@@ -1,12 +1,15 @@
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import type { OrchestraNode, OrchestraAction, NodeType } from '@orchestra/shared';
 import { getComponent } from './componentRegistry';
+import { ScreenRenderer } from './ScreenRenderer';
 
 interface Props {
   node: OrchestraNode | null;
   context: Record<string, any>;
   config: { mapboxToken?: string };
+  datasources: Map<string, Record<string, any>[]>;
   onAction: (action: OrchestraAction) => void;
+  onNavigate: (nodeId: string) => void;
   loading: boolean;
   error: string | null;
 }
@@ -15,7 +18,9 @@ export function NodeRenderer({
   node,
   context,
   config,
+  datasources,
   onAction,
+  onNavigate,
   loading,
   error,
 }: Props) {
@@ -45,6 +50,19 @@ export function NodeRenderer({
     );
   }
 
+  // If the node has a screenDefinition, use the SDUI ScreenRenderer
+  if (node.props?.screenDefinition) {
+    return (
+      <ScreenRenderer
+        screenDefinition={node.props.screenDefinition}
+        datasourceData={datasources}
+        onNavigate={onNavigate}
+        onAction={onAction}
+      />
+    );
+  }
+
+  // Fallback to legacy node-type components
   const Component = getComponent(node.type as NodeType);
   if (!Component) {
     return (

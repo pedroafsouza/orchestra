@@ -10,6 +10,7 @@ import {
 import '@xyflow/react/dist/style.css';
 import { useFlowStore } from '@/store/flowStore';
 import { useThemeStore } from '@/store/themeStore';
+import { useProjectStore } from '@/store/projectStore';
 import { OrchestraNode, getNodeColor } from '@/components/OrchestraNode';
 import { Sidebar } from '@/components/Sidebar';
 import { Toolbar } from '@/components/Toolbar';
@@ -24,6 +25,7 @@ export function FlowEditorPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const theme = useThemeStore((s) => s.theme);
+  const currentProject = useProjectStore((s) => s.currentProject);
   const loadDiagram = useFlowStore((s) => s.loadDiagram);
   const loaded = useFlowStore((s) => s.loaded);
   const nodes = useFlowStore((s) => s.nodes);
@@ -89,6 +91,7 @@ export function FlowEditorPage() {
     <div className="h-screen flex flex-col bg-secondary">
       <Toolbar
         projectId={projectId!}
+        projectGuid={currentProject?.guid ?? ''}
         onBack={() => navigate(`/project/${projectId}`)}
       />
       <div className="flex flex-1 overflow-hidden">

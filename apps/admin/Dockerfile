@@ -12,6 +12,9 @@ COPY packages/shared/ packages/shared/
 COPY apps/admin/ apps/admin/
 
 RUN npm -w packages/shared run build
+
+ARG VITE_API_URL=http://localhost:3001
+ENV VITE_API_URL=$VITE_API_URL
 RUN npm -w apps/admin run build
 
 FROM node:20-alpine

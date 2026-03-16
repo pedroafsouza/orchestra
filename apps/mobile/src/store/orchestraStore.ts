@@ -1,15 +1,23 @@
 import { create } from 'zustand';
 import type { OrchestraFlow, OrchestraNode } from '@orchestra/shared';
 
+interface DatasourceEntry {
+  id: string;
+  name: string;
+  fields: any[];
+  entries: Record<string, any>[];
+}
+
 interface OrchestraState {
   flow: OrchestraFlow | null;
   currentNodeId: string | null;
   context: Record<string, any>;
   config: { mapboxToken?: string };
+  datasources: Map<string, Record<string, any>[]>;
   loading: boolean;
   error: string | null;
 
-  setFlow: (flow: OrchestraFlow, config?: { mapboxToken?: string }) => void;
+  setFlow: (flow: OrchestraFlow, config?: { mapboxToken?: string }, datasources?: DatasourceEntry[]) => void;
   setCurrentNode: (nodeId: string) => void;
   setContext: (key: string, value: any) => void;
   mergeContext: (data: Record<string, any>) => void;
@@ -25,16 +33,25 @@ export const useOrchestraStore = create<OrchestraState>((set, get) => ({
   currentNodeId: null,
   context: {},
   config: {},
+  datasources: new Map(),
   loading: false,
   error: null,
 
-  setFlow: (flow, config) =>
+  setFlow: (flow, config, datasources) => {
+    const dsMap = new Map<string, Record<string, any>[]>();
+    if (datasources) {
+      for (const ds of datasources) {
+        dsMap.set(ds.id, ds.entries || []);
+      }
+    }
     set({
       flow,
       currentNodeId: flow.entryNodeId,
       config: config || {},
+      datasources: dsMap,
       error: null,
-    }),
+    });
+  },
 
   setCurrentNode: (nodeId) => set({ currentNodeId: nodeId }),
 
@@ -63,6 +80,7 @@ export const useOrchestraStore = create<OrchestraState>((set, get) => ({
       currentNodeId: null,
       context: {},
       config: {},
+      datasources: new Map(),
       loading: false,
       error: null,
     }),

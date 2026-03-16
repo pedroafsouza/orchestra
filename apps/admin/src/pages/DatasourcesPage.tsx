@@ -16,6 +16,7 @@ import {
   Image,
   FileText,
   Link,
+  MapPin,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -54,6 +55,7 @@ const FIELD_TYPES: DatasourceFieldType[] = [
   'date',
   'rich_text',
   'url',
+  'geolocation',
 ];
 
 const FIELD_TYPE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -64,6 +66,7 @@ const FIELD_TYPE_ICONS: Record<string, React.ComponentType<{ className?: string 
   image_url: Image,
   rich_text: FileText,
   url: Link,
+  geolocation: MapPin,
 };
 
 export function DatasourcesPage() {
@@ -148,7 +151,7 @@ export function DatasourcesPage() {
     if (!selectedDs) return;
     const data: Record<string, any> = {};
     for (const field of selectedDs.fields) {
-      data[field.key] = field.type === 'boolean' ? false : field.type === 'number' ? 0 : '';
+      data[field.key] = field.type === 'boolean' ? false : field.type === 'number' ? 0 : field.type === 'geolocation' ? { latitude: 0, longitude: 0 } : '';
     }
     const entry = await api(
       `/api/projects/${projectId}/datasources/${selectedDs.id}/entries`,
@@ -373,7 +376,43 @@ export function DatasourcesPage() {
                       <TableRow key={entry.id}>
                         {(selectedDs.fields as DatasourceField[]).map((f) => (
                           <TableCell key={f.key} className="py-2">
-                            {f.type === 'boolean' ? (
+                            {f.type === 'geolocation' ? (
+                              <div className="flex items-center gap-1.5">
+                                <MapPin className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                                <Input
+                                  className="w-24 h-7 text-xs bg-transparent border-transparent hover:border-input focus-visible:border-ring"
+                                  type="number"
+                                  step="any"
+                                  placeholder="Lat"
+                                  value={entry.data[f.key]?.latitude ?? ''}
+                                  onChange={(e) =>
+                                    handleUpdateEntry(entry.id, {
+                                      ...entry.data,
+                                      [f.key]: {
+                                        ...(entry.data[f.key] || {}),
+                                        latitude: Number(e.target.value),
+                                      },
+                                    })
+                                  }
+                                />
+                                <Input
+                                  className="w-24 h-7 text-xs bg-transparent border-transparent hover:border-input focus-visible:border-ring"
+                                  type="number"
+                                  step="any"
+                                  placeholder="Lng"
+                                  value={entry.data[f.key]?.longitude ?? ''}
+                                  onChange={(e) =>
+                                    handleUpdateEntry(entry.id, {
+                                      ...entry.data,
+                                      [f.key]: {
+                                        ...(entry.data[f.key] || {}),
+                                        longitude: Number(e.target.value),
+                                      },
+                                    })
+                                  }
+                                />
+                              </div>
+                            ) : f.type === 'boolean' ? (
                               <input
                                 type="checkbox"
                                 checked={!!entry.data[f.key]}

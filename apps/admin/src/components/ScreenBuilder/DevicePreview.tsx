@@ -111,7 +111,7 @@ export function DevicePreview() {
           )}
 
           <div
-            className="rounded-[26px] overflow-hidden overflow-y-auto"
+            className="rounded-[26px] overflow-hidden overflow-y-auto device-scrollbar"
             style={{
               width: frame.width * scale,
               height: frame.height * scale,

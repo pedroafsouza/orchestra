@@ -134,13 +134,15 @@ export async function POST(request: NextRequest) {
           target: edge.target,
           type: 'smoothstep',
           animated: true,
+          ...(edge.sourceHandle ? { sourceHandle: edge.sourceHandle } : {}),
+          ...(edge.targetHandle ? { targetHandle: edge.targetHandle } : {}),
         }));
 
         // Save diagram to project
         await prisma.project.update({
           where: { id: project.id },
           data: {
-            diagram: { nodes: diagramNodes, edges: diagramEdges } as any,
+            diagram: { nodes: diagramNodes, edges: diagramEdges, flowName: name } as any,
           },
         });
       }

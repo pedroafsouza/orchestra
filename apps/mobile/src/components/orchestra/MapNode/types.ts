@@ -17,4 +17,5 @@ export interface MapNodeProps {
   permissionDenied: boolean;
   actions: OrchestraAction[];
   onAction: (action: OrchestraAction) => void;
+  onMarkerPress?: (marker: MapMarker) => void;
 }

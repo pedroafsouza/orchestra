@@ -10,7 +10,7 @@ export const NodeType = z.enum([
 ]);
 export type NodeType = z.infer<typeof NodeType>;
 
-export const ActionTrigger = z.enum(['onLoad', 'onPress', 'onValueChange']);
+export const ActionTrigger = z.enum(['onLoad', 'onPress', 'onValueChange', 'onMarkerPress']);
 export type ActionTrigger = z.infer<typeof ActionTrigger>;
 
 export const ActionType = z.enum([

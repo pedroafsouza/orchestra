@@ -152,7 +152,32 @@ export function OrchestraNode({ id, data }: NodeProps) {
       <Handle
         type="source"
         position={Position.Bottom}
+        id="bottom"
         className="!w-3 !h-3 !bg-gray-400 dark:!bg-slate-500 !border-2 !border-white dark:!border-slate-800 !-bottom-1.5"
+      />
+      <Handle
+        type="source"
+        position={Position.Left}
+        id="left"
+        className="!w-3 !h-3 !bg-gray-400 dark:!bg-slate-500 !border-2 !border-white dark:!border-slate-800 !-left-1.5"
+      />
+      <Handle
+        type="source"
+        position={Position.Right}
+        id="right"
+        className="!w-3 !h-3 !bg-gray-400 dark:!bg-slate-500 !border-2 !border-white dark:!border-slate-800 !-right-1.5"
+      />
+      <Handle
+        type="target"
+        position={Position.Left}
+        id="target-left"
+        className="!w-3 !h-3 !bg-gray-400 dark:!bg-slate-500 !border-2 !border-white dark:!border-slate-800 !-left-1.5"
+      />
+      <Handle
+        type="target"
+        position={Position.Right}
+        id="target-right"
+        className="!w-3 !h-3 !bg-gray-400 dark:!bg-slate-500 !border-2 !border-white dark:!border-slate-800 !-right-1.5"
       />
     </div>
   );

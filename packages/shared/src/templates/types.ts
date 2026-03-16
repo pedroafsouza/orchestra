@@ -25,6 +25,8 @@ export interface TemplateEdge {
   id: string;
   source: string;
   target: string;
+  sourceHandle?: string;
+  targetHandle?: string;
 }
 
 export interface ProjectTemplate {

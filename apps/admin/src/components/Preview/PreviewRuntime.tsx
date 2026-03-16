@@ -2,8 +2,8 @@ import { useState, useCallback } from 'react';
 import type {
   ScreenComponent,
   Breakpoint,
-  ComponentStyle,
 } from '@orchestra/shared';
+import { resolveStyle } from '@/lib/resolveStyle';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -35,56 +35,6 @@ interface RuntimeComponentProps {
     payload: any;
     formValues: Record<string, string>;
   }) => void;
-}
-
-// ─── resolveStyle (mirrored from ComponentPreview) ──────────────────────────
-
-function resolveStyle(
-  component: ScreenComponent,
-  breakpoint: Breakpoint,
-): React.CSSProperties {
-  const base = component.style?.base || {};
-  const bpStyle = component.style?.[breakpoint] || {};
-  const merged: ComponentStyle = { ...base, ...bpStyle };
-
-  const css: React.CSSProperties = {};
-
-  if (merged.backgroundColor) css.backgroundColor = merged.backgroundColor;
-  if (merged.textColor) css.color = merged.textColor;
-  if (merged.fontSize) css.fontSize = merged.fontSize;
-  if (merged.fontWeight) css.fontWeight = merged.fontWeight as any;
-  if (merged.textAlign) css.textAlign = merged.textAlign;
-  if (merged.opacity !== undefined) css.opacity = merged.opacity;
-  if (merged.width) css.width = merged.width;
-  if (merged.height) css.height = merged.height;
-  if (merged.minHeight) css.minHeight = merged.minHeight;
-  if (merged.alignSelf) css.alignSelf = merged.alignSelf;
-
-  if (merged.padding) {
-    css.paddingTop = merged.padding.top;
-    css.paddingRight = merged.padding.right;
-    css.paddingBottom = merged.padding.bottom;
-    css.paddingLeft = merged.padding.left;
-  }
-  if (merged.margin) {
-    css.marginTop = merged.margin.top;
-    css.marginRight = merged.margin.right;
-    css.marginBottom = merged.margin.bottom;
-    css.marginLeft = merged.margin.left;
-  }
-  if (merged.border) {
-    if (merged.border.width) css.borderWidth = merged.border.width;
-    if (merged.border.color) {
-      css.borderColor = merged.border.color;
-      css.borderStyle = 'solid';
-    }
-    if (merged.border.radius) css.borderRadius = merged.border.radius;
-  }
-  if (merged.shadow) {
-    css.boxShadow = `${merged.shadow.offsetX || 0}px ${merged.shadow.offsetY || 2}px ${merged.shadow.blur || 4}px ${merged.shadow.color || 'rgba(0,0,0,0.2)'}`;
-  }
-
-  return css;
 }
 
 // ─── Template interpolation ─────────────────────────────────────────────────
@@ -734,7 +684,15 @@ function RuntimeComponent({
     }
 
     // ── Map View ──────────────────────────────────────────────────────────
-    case 'map_view':
+    case 'map_view': {
+      // Resolve markers from datasource binding
+      const mapDsId = component.datasource?.datasourceId;
+      const mapEntries = mapDsId ? datasourceData.get(mapDsId) : undefined;
+      const markerCount =
+        mapEntries && component.datasource?.fieldMappings?.markerPosition
+          ? mapEntries.length
+          : 0;
+
       return (
         <div
           style={{
@@ -743,12 +701,14 @@ function RuntimeComponent({
             backgroundColor: '#1a2332',
             borderRadius: 12,
             display: 'flex',
+            flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
             color: '#475569',
             fontSize: 12,
             position: 'relative',
             overflow: 'hidden',
+            gap: 6,
             ...resolveStyle(component, breakpoint),
           }}
         >
@@ -762,8 +722,24 @@ function RuntimeComponent({
             }}
           />
           <span style={{ zIndex: 1 }}>{'\u{1F4CD}'} Map View</span>
+          {markerCount > 0 && (
+            <span
+              style={{
+                zIndex: 1,
+                backgroundColor: '#6366f1',
+                color: '#fff',
+                padding: '2px 10px',
+                borderRadius: 12,
+                fontSize: 11,
+                fontWeight: 600,
+              }}
+            >
+              {markerCount} {markerCount === 1 ? 'event' : 'events'}
+            </span>
+          )}
         </div>
       );
+    }
 
     // ── Chip ──────────────────────────────────────────────────────────────
     case 'chip': {

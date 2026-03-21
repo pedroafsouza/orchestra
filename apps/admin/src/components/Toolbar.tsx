@@ -6,6 +6,7 @@ import { ThemeToggle } from './ThemeToggle';
 import { ArrowLeft, Download, Rocket, Play, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useToast } from '@/components/ui/use-toast';
 
 const EXPO_DEV_URL = import.meta.env.VITE_EXPO_DEV_URL || 'http://localhost:8081';
 
@@ -22,6 +23,8 @@ export function Toolbar({ projectId, projectGuid, onBack }: ToolbarProps) {
   const nodes = useFlowStore((s) => s.nodes);
   const edges = useFlowStore((s) => s.edges);
   const [previewLoading, setPreviewLoading] = useState(false);
+  const [deploying, setDeploying] = useState(false);
+  const { toast } = useToast();
 
   const handleExport = () => {
     const json = getExportJSON();
@@ -41,10 +44,15 @@ export function Toolbar({ projectId, projectGuid, onBack }: ToolbarProps) {
 
     const result = OrchestraFlowSchema.safeParse(json);
     if (!result.success) {
-      alert(`Schema validation failed:\n${JSON.stringify(result.error.issues, null, 2)}`);
+      toast({
+        title: 'Schema validation failed',
+        description: result.error.issues.map((i) => i.message).join(', '),
+        variant: 'destructive',
+      });
       return;
     }
 
+    setDeploying(true);
     try {
       const record = await api(`/api/projects/${projectId}/flows`, {
         method: 'POST',
@@ -53,9 +61,18 @@ export function Toolbar({ projectId, projectGuid, onBack }: ToolbarProps) {
 
       await api(`/api/flow/${record.id}/publish`, { method: 'POST' });
 
-      alert(`Flow deployed! Version: ${record.version}`);
+      toast({
+        title: `Flow deployed successfully (v${record.version})`,
+        variant: 'success',
+      });
     } catch (err) {
-      alert(`Deploy error: ${err instanceof Error ? err.message : err}`);
+      toast({
+        title: 'Deploy failed',
+        description: err instanceof Error ? err.message : String(err),
+        variant: 'destructive',
+      });
+    } finally {
+      setDeploying(false);
     }
   };
 
@@ -64,14 +81,14 @@ export function Toolbar({ projectId, projectGuid, onBack }: ToolbarProps) {
     try {
       // Pre-flight check 1: At least one node
       if (nodes.length === 0) {
-        alert('Cannot preview: No nodes in the flow. Add at least one node.');
+        toast({ title: 'Cannot preview', description: 'No nodes in the flow. Add at least one node.', variant: 'destructive' });
         return;
       }
 
       // Pre-flight check 2: Entry node exists (landing type preferred)
       const hasLanding = nodes.some((n) => n.data.nodeType === 'landing');
       if (!hasLanding) {
-        alert('Cannot preview: No landing node found. Add a landing node as the entry point.');
+        toast({ title: 'Cannot preview', description: 'No landing node found. Add a landing node as the entry point.', variant: 'destructive' });
         return;
       }
 
@@ -85,7 +102,7 @@ export function Toolbar({ projectId, projectGuid, onBack }: ToolbarProps) {
         }
       }
       if (invalidRefs.length > 0) {
-        alert(`Cannot preview: Invalid navigation references found:\n${invalidRefs.join('\n')}`);
+        toast({ title: 'Cannot preview', description: `Invalid navigation references: ${invalidRefs.join(', ')}`, variant: 'destructive' });
         return;
       }
 
@@ -94,11 +111,11 @@ export function Toolbar({ projectId, projectGuid, onBack }: ToolbarProps) {
         const flows = await api(`/api/projects/${projectId}/flows`);
         const hasPublished = Array.isArray(flows) && flows.some((f: any) => f.published);
         if (!hasPublished) {
-          alert('Please deploy your flow first before previewing.');
+          toast({ title: 'Cannot preview', description: 'Please deploy your flow first before previewing.', variant: 'destructive' });
           return;
         }
       } catch {
-        alert('Please deploy your flow first before previewing.');
+        toast({ title: 'Cannot preview', description: 'Please deploy your flow first before previewing.', variant: 'destructive' });
         return;
       }
 
@@ -109,11 +126,12 @@ export function Toolbar({ projectId, projectGuid, onBack }: ToolbarProps) {
         await fetch(EXPO_DEV_URL, { mode: 'no-cors', signal: controller.signal });
         clearTimeout(timeout);
       } catch {
-        alert(
-          `Expo dev server is not reachable at ${EXPO_DEV_URL}.\n\n` +
-          'Start it with: cd apps/mobile && npm start -- --web\n\n' +
-          'Or set VITE_EXPO_DEV_URL in your .env to the correct address.'
-        );
+        toast({
+          title: 'Expo dev server not reachable',
+          description: `Start it with: cd apps/mobile && npm start -- --web`,
+          variant: 'destructive',
+          duration: 6000,
+        });
         return;
       }
 
@@ -162,9 +180,9 @@ export function Toolbar({ projectId, projectGuid, onBack }: ToolbarProps) {
           <Download className="w-3.5 h-3.5" />
           Export
         </Button>
-        <Button size="sm" onClick={handleDeploy} className="gap-1.5">
-          <Rocket className="w-3.5 h-3.5" />
-          Deploy
+        <Button size="sm" onClick={handleDeploy} disabled={deploying} className="gap-1.5">
+          {deploying ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Rocket className="w-3.5 h-3.5" />}
+          {deploying ? 'Deploying...' : 'Deploy'}
         </Button>
       </div>
     </header>

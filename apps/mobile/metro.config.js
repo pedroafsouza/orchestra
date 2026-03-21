@@ -6,10 +6,10 @@ const monorepoRoot = path.resolve(projectRoot, '../..');
 
 const config = getDefaultConfig(projectRoot);
 
-// Watch the monorepo root for shared packages
+// Watch the monorepo root for changes in shared packages
 config.watchFolders = [monorepoRoot];
 
-// Resolve modules from both the mobile app and the monorepo root
+// Let Metro resolve packages from the monorepo root node_modules (hoisted)
 config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, 'node_modules'),
   path.resolve(monorepoRoot, 'node_modules'),

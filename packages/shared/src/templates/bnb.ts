@@ -360,7 +360,7 @@ export const BNB_TEMPLATE: ProjectTemplate = {
           {
             id: 'sc_bnb_21',
             type: 'image',
-            props: { src: '', alt: 'property detail' },
+            props: { src: '{{imageUrl}}', alt: 'property detail' },
             style: {
               base: {
                 width: '100%',

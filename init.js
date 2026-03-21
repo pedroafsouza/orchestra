@@ -36,9 +36,11 @@ function prompt() {
 }
 
 async function main() {
-  banner();
+  const arg = process.argv[2];
 
-  const choice = await prompt();
+  if (!arg) banner();
+
+  const choice = arg || (await prompt());
 
   if (choice === "3") {
     console.log(`\n${CYAN}  Installing dependencies across all workspace apps…${NC}\n`);

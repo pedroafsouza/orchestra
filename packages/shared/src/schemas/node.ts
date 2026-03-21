@@ -7,6 +7,7 @@ export const NodeType = z.enum([
   'map',
   'photo_gallery',
   'decision',
+  'detail',
 ]);
 export type NodeType = z.infer<typeof NodeType>;
 

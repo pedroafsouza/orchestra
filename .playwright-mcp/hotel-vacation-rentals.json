@@ -1,0 +1,1231 @@
+{
+  "id": "ac61be1b-5450-4c3a-b488-094a491d162d",
+  "version": 1,
+  "name": "Hotel & Vacation Rentals",
+  "entryNodeId": "node_3_mn0s59rr",
+  "nodes": [
+    {
+      "id": "node_3_mn0s59rr",
+      "type": "landing",
+      "props": {
+        "screenDefinition": {
+          "rootComponents": [
+            {
+              "id": "sc_4_mn0s59rr",
+              "type": "text",
+              "props": {
+                "content": "Explore"
+              },
+              "style": {
+                "base": {
+                  "fontSize": 26,
+                  "fontWeight": "bold",
+                  "textColor": "#f8fafc",
+                  "padding": {
+                    "top": 20,
+                    "right": 16,
+                    "bottom": 4,
+                    "left": 16
+                  }
+                }
+              }
+            },
+            {
+              "id": "sc_5_mn0s59rr",
+              "type": "text",
+              "props": {
+                "content": "Find your next adventure"
+              },
+              "style": {
+                "base": {
+                  "fontSize": 13,
+                  "textColor": "#94a3b8",
+                  "padding": {
+                    "top": 0,
+                    "right": 16,
+                    "bottom": 16,
+                    "left": 16
+                  }
+                }
+              }
+            },
+            {
+              "id": "sc_6_mn0s59rr",
+              "type": "input",
+              "props": {
+                "placeholder": "Search destinations...",
+                "type": "text"
+              },
+              "style": {
+                "base": {
+                  "margin": {
+                    "top": 0,
+                    "right": 16,
+                    "bottom": 12,
+                    "left": 16
+                  }
+                }
+              }
+            },
+            {
+              "id": "sc_7_mn0s59rr",
+              "type": "horizontal_scroll",
+              "props": {
+                "gap": 8
+              },
+              "style": {
+                "base": {
+                  "padding": {
+                    "top": 0,
+                    "right": 16,
+                    "bottom": 4,
+                    "left": 16
+                  }
+                }
+              },
+              "children": [
+                {
+                  "id": "sc_8_mn0s59rr",
+                  "type": "chip",
+                  "props": {
+                    "label": "Beach",
+                    "variant": "outline"
+                  }
+                },
+                {
+                  "id": "sc_9_mn0s59rr",
+                  "type": "chip",
+                  "props": {
+                    "label": "Mountain",
+                    "variant": "outline"
+                  }
+                },
+                {
+                  "id": "sc_10_mn0s59rr",
+                  "type": "chip",
+                  "props": {
+                    "label": "City",
+                    "variant": "outline"
+                  }
+                },
+                {
+                  "id": "sc_11_mn0s59rr",
+                  "type": "chip",
+                  "props": {
+                    "label": "Lake",
+                    "variant": "outline"
+                  }
+                },
+                {
+                  "id": "sc_12_mn0s59rr",
+                  "type": "chip",
+                  "props": {
+                    "label": "Tropical",
+                    "variant": "outline"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "sc_13_mn0s59rr",
+              "type": "list",
+              "props": {
+                "direction": "vertical",
+                "gap": 12
+              },
+              "style": {
+                "base": {
+                  "padding": {
+                    "top": 0,
+                    "right": 16,
+                    "bottom": 16,
+                    "left": 16
+                  }
+                }
+              },
+              "datasource": {
+                "datasourceId": "69beff4fc29009f65f990001",
+                "fieldMappings": {}
+              },
+              "children": [
+                {
+                  "id": "sc_14_mn0s59rr",
+                  "type": "card",
+                  "props": {
+                    "elevation": 2
+                  },
+                  "style": {
+                    "base": {
+                      "backgroundColor": "#1e293b",
+                      "border": {
+                        "radius": 16
+                      }
+                    }
+                  },
+                  "children": [
+                    {
+                      "id": "sc_15_mn0s59rr",
+                      "type": "image",
+                      "props": {
+                        "src": "{{imageUrl}}",
+                        "alt": "property"
+                      },
+                      "style": {
+                        "base": {
+                          "width": "100%",
+                          "height": 160,
+                          "border": {
+                            "radius": 12
+                          }
+                        }
+                      },
+                      "datasource": {
+                        "datasourceId": "69beff4fc29009f65f990001",
+                        "fieldMappings": {
+                          "src": "imageUrl"
+                        }
+                      }
+                    },
+                    {
+                      "id": "sc_16_mn0s59rr",
+                      "type": "container",
+                      "props": {
+                        "direction": "horizontal",
+                        "gap": 8
+                      },
+                      "style": {
+                        "base": {
+                          "padding": {
+                            "top": 10,
+                            "right": 12,
+                            "bottom": 4,
+                            "left": 12
+                          }
+                        }
+                      },
+                      "children": [
+                        {
+                          "id": "sc_17_mn0s59rr",
+                          "type": "text",
+                          "props": {
+                            "content": "{{location}}"
+                          },
+                          "style": {
+                            "base": {
+                              "fontSize": 11,
+                              "textColor": "#94a3b8"
+                            }
+                          },
+                          "datasource": {
+                            "datasourceId": "69beff4fc29009f65f990001",
+                            "fieldMappings": {
+                              "content": "location"
+                            }
+                          }
+                        },
+                        {
+                          "id": "sc_18_mn0s59rr",
+                          "type": "rating_stars",
+                          "props": {
+                            "value": 4.5
+                          },
+                          "datasource": {
+                            "datasourceId": "69beff4fc29009f65f990001",
+                            "fieldMappings": {
+                              "value": "rating"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "id": "sc_19_mn0s59rr",
+                      "type": "text",
+                      "props": {
+                        "content": "{{title}}"
+                      },
+                      "style": {
+                        "base": {
+                          "fontSize": 16,
+                          "fontWeight": "600",
+                          "textColor": "#f8fafc",
+                          "padding": {
+                            "top": 0,
+                            "right": 12,
+                            "bottom": 4,
+                            "left": 12
+                          }
+                        }
+                      },
+                      "datasource": {
+                        "datasourceId": "69beff4fc29009f65f990001",
+                        "fieldMappings": {
+                          "content": "title"
+                        }
+                      }
+                    },
+                    {
+                      "id": "sc_20_mn0s59rr",
+                      "type": "container",
+                      "props": {
+                        "direction": "horizontal",
+                        "gap": 6
+                      },
+                      "style": {
+                        "base": {
+                          "padding": {
+                            "top": 0,
+                            "right": 12,
+                            "bottom": 10,
+                            "left": 12
+                          }
+                        }
+                      },
+                      "children": [
+                        {
+                          "id": "sc_21_mn0s59rr",
+                          "type": "price_tag",
+                          "props": {
+                            "amount": 99,
+                            "currency": "$",
+                            "period": "/night"
+                          },
+                          "datasource": {
+                            "datasourceId": "69beff4fc29009f65f990001",
+                            "fieldMappings": {
+                              "amount": "pricePerNight"
+                            }
+                          }
+                        },
+                        {
+                          "id": "sc_22_mn0s59rr",
+                          "type": "spacer",
+                          "props": {
+                            "height": 1
+                          }
+                        },
+                        {
+                          "id": "sc_23_mn0s59rr",
+                          "type": "button",
+                          "props": {
+                            "label": "View",
+                            "variant": "primary",
+                            "navigateTo": "node_24_mn0s59rr"
+                          },
+                          "style": {
+                            "base": {
+                              "fontSize": 12,
+                              "padding": {
+                                "top": 6,
+                                "right": 16,
+                                "bottom": 6,
+                                "left": 16
+                              },
+                              "backgroundColor": "#6366f1",
+                              "border": {
+                                "radius": 8
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "backgroundColor": "#0f172a",
+          "scrollable": true
+        }
+      },
+      "actions": []
+    },
+    {
+      "id": "node_24_mn0s59rr",
+      "type": "list",
+      "props": {
+        "screenDefinition": {
+          "rootComponents": [
+            {
+              "id": "sc_25_mn0s59rr",
+              "type": "image",
+              "props": {
+                "src": "",
+                "alt": "property detail"
+              },
+              "style": {
+                "base": {
+                  "width": "100%",
+                  "height": 220
+                }
+              }
+            },
+            {
+              "id": "sc_26_mn0s59rr",
+              "type": "container",
+              "props": {
+                "direction": "vertical",
+                "gap": 4
+              },
+              "style": {
+                "base": {
+                  "padding": {
+                    "top": 16,
+                    "right": 16,
+                    "bottom": 0,
+                    "left": 16
+                  }
+                }
+              },
+              "children": [
+                {
+                  "id": "sc_27_mn0s59rr",
+                  "type": "container",
+                  "props": {
+                    "direction": "horizontal",
+                    "gap": 8
+                  },
+                  "children": [
+                    {
+                      "id": "sc_28_mn0s59rr",
+                      "type": "text",
+                      "props": {
+                        "content": "{{location}}"
+                      },
+                      "style": {
+                        "base": {
+                          "fontSize": 12,
+                          "textColor": "#94a3b8"
+                        }
+                      }
+                    },
+                    {
+                      "id": "sc_29_mn0s59rr",
+                      "type": "rating_stars",
+                      "props": {
+                        "value": 4.5
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "sc_30_mn0s59rr",
+                  "type": "text",
+                  "props": {
+                    "content": "{{title}}"
+                  },
+                  "style": {
+                    "base": {
+                      "fontSize": 22,
+                      "fontWeight": "bold",
+                      "textColor": "#f8fafc"
+                    }
+                  }
+                },
+                {
+                  "id": "sc_31_mn0s59rr",
+                  "type": "text",
+                  "props": {
+                    "content": "{{description}}"
+                  },
+                  "style": {
+                    "base": {
+                      "fontSize": 13,
+                      "textColor": "#94a3b8",
+                      "padding": {
+                        "top": 4,
+                        "right": 0,
+                        "bottom": 8,
+                        "left": 0
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "id": "sc_32_mn0s59rr",
+              "type": "divider",
+              "props": {
+                "color": "#1e293b",
+                "thickness": 1
+              }
+            },
+            {
+              "id": "sc_33_mn0s59rr",
+              "type": "container",
+              "props": {
+                "direction": "horizontal",
+                "gap": 16
+              },
+              "style": {
+                "base": {
+                  "padding": {
+                    "top": 12,
+                    "right": 16,
+                    "bottom": 12,
+                    "left": 16
+                  }
+                }
+              },
+              "children": [
+                {
+                  "id": "sc_34_mn0s59rr",
+                  "type": "container",
+                  "props": {
+                    "direction": "vertical",
+                    "gap": 2
+                  },
+                  "children": [
+                    {
+                      "id": "sc_35_mn0s59rr",
+                      "type": "text",
+                      "props": {
+                        "content": "Guests"
+                      },
+                      "style": {
+                        "base": {
+                          "fontSize": 11,
+                          "textColor": "#64748b"
+                        }
+                      }
+                    },
+                    {
+                      "id": "sc_36_mn0s59rr",
+                      "type": "text",
+                      "props": {
+                        "content": "4"
+                      },
+                      "style": {
+                        "base": {
+                          "fontSize": 16,
+                          "fontWeight": "600",
+                          "textColor": "#f8fafc"
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "sc_37_mn0s59rr",
+                  "type": "container",
+                  "props": {
+                    "direction": "vertical",
+                    "gap": 2
+                  },
+                  "children": [
+                    {
+                      "id": "sc_38_mn0s59rr",
+                      "type": "text",
+                      "props": {
+                        "content": "Bedrooms"
+                      },
+                      "style": {
+                        "base": {
+                          "fontSize": 11,
+                          "textColor": "#64748b"
+                        }
+                      }
+                    },
+                    {
+                      "id": "sc_39_mn0s59rr",
+                      "type": "text",
+                      "props": {
+                        "content": "2"
+                      },
+                      "style": {
+                        "base": {
+                          "fontSize": 16,
+                          "fontWeight": "600",
+                          "textColor": "#f8fafc"
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "sc_40_mn0s59rr",
+                  "type": "container",
+                  "props": {
+                    "direction": "vertical",
+                    "gap": 2
+                  },
+                  "children": [
+                    {
+                      "id": "sc_41_mn0s59rr",
+                      "type": "text",
+                      "props": {
+                        "content": "Price"
+                      },
+                      "style": {
+                        "base": {
+                          "fontSize": 11,
+                          "textColor": "#64748b"
+                        }
+                      }
+                    },
+                    {
+                      "id": "sc_42_mn0s59rr",
+                      "type": "price_tag",
+                      "props": {
+                        "amount": 120,
+                        "currency": "$",
+                        "period": "/night"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "sc_43_mn0s59rr",
+              "type": "divider",
+              "props": {
+                "color": "#1e293b",
+                "thickness": 1
+              }
+            },
+            {
+              "id": "sc_44_mn0s59rr",
+              "type": "map_view",
+              "props": {
+                "height": 160
+              },
+              "style": {
+                "base": {
+                  "margin": {
+                    "top": 12,
+                    "right": 16,
+                    "bottom": 12,
+                    "left": 16
+                  },
+                  "border": {
+                    "radius": 12
+                  }
+                }
+              }
+            },
+            {
+              "id": "sc_45_mn0s59rr",
+              "type": "container",
+              "props": {
+                "direction": "horizontal",
+                "gap": 10
+              },
+              "style": {
+                "base": {
+                  "padding": {
+                    "top": 8,
+                    "right": 16,
+                    "bottom": 20,
+                    "left": 16
+                  }
+                }
+              },
+              "children": [
+                {
+                  "id": "sc_46_mn0s59rr",
+                  "type": "button",
+                  "props": {
+                    "label": "Book Now",
+                    "variant": "primary",
+                    "navigateTo": "node_48_mn0s59rr"
+                  },
+                  "style": {
+                    "base": {
+                      "backgroundColor": "#6366f1"
+                    }
+                  }
+                },
+                {
+                  "id": "sc_47_mn0s59rr",
+                  "type": "button",
+                  "props": {
+                    "label": "Back",
+                    "variant": "secondary",
+                    "navigateTo": "node_3_mn0s59rr"
+                  },
+                  "style": {
+                    "base": {
+                      "backgroundColor": "#334155"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "backgroundColor": "#0f172a",
+          "scrollable": true
+        }
+      },
+      "actions": []
+    },
+    {
+      "id": "node_48_mn0s59rr",
+      "type": "form",
+      "props": {
+        "screenDefinition": {
+          "rootComponents": [
+            {
+              "id": "sc_49_mn0s59rr",
+              "type": "text",
+              "props": {
+                "content": "Book your stay"
+              },
+              "style": {
+                "base": {
+                  "fontSize": 22,
+                  "fontWeight": "bold",
+                  "textColor": "#f8fafc",
+                  "padding": {
+                    "top": 20,
+                    "right": 16,
+                    "bottom": 4,
+                    "left": 16
+                  }
+                }
+              }
+            },
+            {
+              "id": "sc_50_mn0s59rr",
+              "type": "text",
+              "props": {
+                "content": "Fill in the details below"
+              },
+              "style": {
+                "base": {
+                  "fontSize": 13,
+                  "textColor": "#94a3b8",
+                  "padding": {
+                    "top": 0,
+                    "right": 16,
+                    "bottom": 16,
+                    "left": 16
+                  }
+                }
+              }
+            },
+            {
+              "id": "sc_51_mn0s59rr",
+              "type": "container",
+              "props": {
+                "direction": "vertical",
+                "gap": 12
+              },
+              "style": {
+                "base": {
+                  "padding": {
+                    "top": 0,
+                    "right": 16,
+                    "bottom": 0,
+                    "left": 16
+                  }
+                }
+              },
+              "children": [
+                {
+                  "id": "sc_52_mn0s59rr",
+                  "type": "text",
+                  "props": {
+                    "content": "Check-in"
+                  },
+                  "style": {
+                    "base": {
+                      "fontSize": 12,
+                      "textColor": "#94a3b8"
+                    }
+                  }
+                },
+                {
+                  "id": "sc_53_mn0s59rr",
+                  "type": "input",
+                  "props": {
+                    "placeholder": "YYYY-MM-DD",
+                    "type": "text"
+                  }
+                },
+                {
+                  "id": "sc_54_mn0s59rr",
+                  "type": "text",
+                  "props": {
+                    "content": "Check-out"
+                  },
+                  "style": {
+                    "base": {
+                      "fontSize": 12,
+                      "textColor": "#94a3b8"
+                    }
+                  }
+                },
+                {
+                  "id": "sc_55_mn0s59rr",
+                  "type": "input",
+                  "props": {
+                    "placeholder": "YYYY-MM-DD",
+                    "type": "text"
+                  }
+                },
+                {
+                  "id": "sc_56_mn0s59rr",
+                  "type": "text",
+                  "props": {
+                    "content": "Guests"
+                  },
+                  "style": {
+                    "base": {
+                      "fontSize": 12,
+                      "textColor": "#94a3b8"
+                    }
+                  }
+                },
+                {
+                  "id": "sc_57_mn0s59rr",
+                  "type": "input",
+                  "props": {
+                    "placeholder": "Number of guests",
+                    "type": "text"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "sc_58_mn0s59rr",
+              "type": "spacer",
+              "props": {},
+              "style": {
+                "base": {
+                  "height": 16
+                }
+              }
+            },
+            {
+              "id": "sc_59_mn0s59rr",
+              "type": "card",
+              "props": {},
+              "style": {
+                "base": {
+                  "backgroundColor": "#1e293b",
+                  "border": {
+                    "radius": 12
+                  },
+                  "padding": {
+                    "top": 16,
+                    "right": 16,
+                    "bottom": 16,
+                    "left": 16
+                  },
+                  "margin": {
+                    "top": 0,
+                    "right": 16,
+                    "bottom": 0,
+                    "left": 16
+                  }
+                }
+              },
+              "children": [
+                {
+                  "id": "sc_60_mn0s59rr",
+                  "type": "container",
+                  "props": {
+                    "direction": "horizontal",
+                    "gap": 0
+                  },
+                  "children": [
+                    {
+                      "id": "sc_61_mn0s59rr",
+                      "type": "text",
+                      "props": {
+                        "content": "Total"
+                      },
+                      "style": {
+                        "base": {
+                          "fontSize": 14,
+                          "textColor": "#94a3b8"
+                        }
+                      }
+                    },
+                    {
+                      "id": "sc_62_mn0s59rr",
+                      "type": "price_tag",
+                      "props": {
+                        "amount": 600,
+                        "currency": "$",
+                        "period": "total"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "sc_63_mn0s59rr",
+              "type": "spacer",
+              "props": {},
+              "style": {
+                "base": {
+                  "height": 8
+                }
+              }
+            },
+            {
+              "id": "sc_64_mn0s59rr",
+              "type": "button",
+              "props": {
+                "label": "Confirm Booking",
+                "variant": "primary",
+                "navigateTo": "node_66_mn0s59rr"
+              },
+              "style": {
+                "base": {
+                  "margin": {
+                    "top": 0,
+                    "right": 16,
+                    "bottom": 0,
+                    "left": 16
+                  },
+                  "backgroundColor": "#6366f1"
+                }
+              },
+              "actions": [
+                {
+                  "trigger": "onPress",
+                  "type": "DATASOURCE_ADD",
+                  "payload": {
+                    "datasourceId": "69beff4fc29009f65f990007"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "sc_65_mn0s59rr",
+              "type": "button",
+              "props": {
+                "label": "Cancel",
+                "variant": "secondary",
+                "navigateTo": "node_24_mn0s59rr"
+              },
+              "style": {
+                "base": {
+                  "margin": {
+                    "top": 8,
+                    "right": 16,
+                    "bottom": 20,
+                    "left": 16
+                  },
+                  "backgroundColor": "#334155"
+                }
+              }
+            }
+          ],
+          "backgroundColor": "#0f172a",
+          "scrollable": true
+        }
+      },
+      "actions": []
+    },
+    {
+      "id": "node_66_mn0s59rr",
+      "type": "list",
+      "props": {
+        "screenDefinition": {
+          "rootComponents": [
+            {
+              "id": "sc_67_mn0s59rr",
+              "type": "text",
+              "props": {
+                "content": "My Bookings"
+              },
+              "style": {
+                "base": {
+                  "fontSize": 22,
+                  "fontWeight": "bold",
+                  "textColor": "#f8fafc",
+                  "padding": {
+                    "top": 20,
+                    "right": 16,
+                    "bottom": 8,
+                    "left": 16
+                  }
+                }
+              }
+            },
+            {
+              "id": "sc_68_mn0s59rr",
+              "type": "list",
+              "props": {
+                "direction": "vertical",
+                "gap": 10
+              },
+              "style": {
+                "base": {
+                  "padding": {
+                    "top": 0,
+                    "right": 16,
+                    "bottom": 16,
+                    "left": 16
+                  }
+                }
+              },
+              "datasource": {
+                "datasourceId": "69beff4fc29009f65f990007",
+                "fieldMappings": {}
+              },
+              "children": [
+                {
+                  "id": "sc_69_mn0s59rr",
+                  "type": "card",
+                  "props": {},
+                  "style": {
+                    "base": {
+                      "backgroundColor": "#1e293b",
+                      "border": {
+                        "radius": 12
+                      },
+                      "padding": {
+                        "top": 14,
+                        "right": 14,
+                        "bottom": 14,
+                        "left": 14
+                      }
+                    }
+                  },
+                  "children": [
+                    {
+                      "id": "sc_70_mn0s59rr",
+                      "type": "text",
+                      "props": {
+                        "content": "{{propertyTitle}}"
+                      },
+                      "style": {
+                        "base": {
+                          "fontSize": 15,
+                          "fontWeight": "600",
+                          "textColor": "#f8fafc"
+                        }
+                      },
+                      "datasource": {
+                        "datasourceId": "69beff4fc29009f65f990007",
+                        "fieldMappings": {
+                          "content": "propertyTitle"
+                        }
+                      }
+                    },
+                    {
+                      "id": "sc_71_mn0s59rr",
+                      "type": "container",
+                      "props": {
+                        "direction": "horizontal",
+                        "gap": 12
+                      },
+                      "style": {
+                        "base": {
+                          "padding": {
+                            "top": 6,
+                            "right": 0,
+                            "bottom": 0,
+                            "left": 0
+                          }
+                        }
+                      },
+                      "children": [
+                        {
+                          "id": "sc_72_mn0s59rr",
+                          "type": "container",
+                          "props": {
+                            "direction": "vertical",
+                            "gap": 2
+                          },
+                          "children": [
+                            {
+                              "id": "sc_73_mn0s59rr",
+                              "type": "text",
+                              "props": {
+                                "content": "Check-in"
+                              },
+                              "style": {
+                                "base": {
+                                  "fontSize": 10,
+                                  "textColor": "#64748b"
+                                }
+                              }
+                            },
+                            {
+                              "id": "sc_74_mn0s59rr",
+                              "type": "text",
+                              "props": {
+                                "content": "{{checkIn}}"
+                              },
+                              "style": {
+                                "base": {
+                                  "fontSize": 12,
+                                  "textColor": "#e2e8f0"
+                                }
+                              },
+                              "datasource": {
+                                "datasourceId": "69beff4fc29009f65f990007",
+                                "fieldMappings": {
+                                  "content": "checkIn"
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "id": "sc_75_mn0s59rr",
+                          "type": "container",
+                          "props": {
+                            "direction": "vertical",
+                            "gap": 2
+                          },
+                          "children": [
+                            {
+                              "id": "sc_76_mn0s59rr",
+                              "type": "text",
+                              "props": {
+                                "content": "Check-out"
+                              },
+                              "style": {
+                                "base": {
+                                  "fontSize": 10,
+                                  "textColor": "#64748b"
+                                }
+                              }
+                            },
+                            {
+                              "id": "sc_77_mn0s59rr",
+                              "type": "text",
+                              "props": {
+                                "content": "{{checkOut}}"
+                              },
+                              "style": {
+                                "base": {
+                                  "fontSize": 12,
+                                  "textColor": "#e2e8f0"
+                                }
+                              },
+                              "datasource": {
+                                "datasourceId": "69beff4fc29009f65f990007",
+                                "fieldMappings": {
+                                  "content": "checkOut"
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "id": "sc_78_mn0s59rr",
+                          "type": "container",
+                          "props": {
+                            "direction": "vertical",
+                            "gap": 2
+                          },
+                          "children": [
+                            {
+                              "id": "sc_79_mn0s59rr",
+                              "type": "text",
+                              "props": {
+                                "content": "Total"
+                              },
+                              "style": {
+                                "base": {
+                                  "fontSize": 10,
+                                  "textColor": "#64748b"
+                                }
+                              }
+                            },
+                            {
+                              "id": "sc_80_mn0s59rr",
+                              "type": "text",
+                              "props": {
+                                "content": "${{totalPrice}}"
+                              },
+                              "style": {
+                                "base": {
+                                  "fontSize": 12,
+                                  "fontWeight": "600",
+                                  "textColor": "#6366f1"
+                                }
+                              },
+                              "datasource": {
+                                "datasourceId": "69beff4fc29009f65f990007",
+                                "fieldMappings": {
+                                  "content": "totalPrice"
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "sc_81_mn0s59rr",
+              "type": "spacer",
+              "props": {},
+              "style": {
+                "base": {
+                  "height": 8
+                }
+              }
+            },
+            {
+              "id": "sc_82_mn0s59rr",
+              "type": "button",
+              "props": {
+                "label": "Browse More",
+                "variant": "primary",
+                "navigateTo": "node_3_mn0s59rr"
+              },
+              "style": {
+                "base": {
+                  "margin": {
+                    "top": 0,
+                    "right": 16,
+                    "bottom": 20,
+                    "left": 16
+                  },
+                  "backgroundColor": "#6366f1"
+                }
+              }
+            }
+          ],
+          "backgroundColor": "#0f172a",
+          "scrollable": true
+        }
+      },
+      "actions": []
+    },
+    {
+      "id": "node_67",
+      "type": "photo_gallery",
+      "props": {},
+      "actions": []
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_83_mn0s59rr",
+      "source": "node_3_mn0s59rr",
+      "target": "node_24_mn0s59rr"
+    },
+    {
+      "id": "edge_84_mn0s59rr",
+      "source": "node_24_mn0s59rr",
+      "target": "node_48_mn0s59rr"
+    },
+    {
+      "id": "edge_85_mn0s59rr",
+      "source": "node_48_mn0s59rr",
+      "target": "node_66_mn0s59rr"
+    },
+    {
+      "id": "edge_86_mn0s59rr",
+      "source": "node_66_mn0s59rr",
+      "target": "node_3_mn0s59rr"
+    }
+  ]
+}

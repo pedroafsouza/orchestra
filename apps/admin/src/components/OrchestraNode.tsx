@@ -6,6 +6,7 @@ import {
   Map,
   Images,
   GitBranch,
+  LayoutList,
   Box,
   ArrowRight,
 } from 'lucide-react';
@@ -50,6 +51,12 @@ const NODE_STYLES: Record<string, { accent: string; iconBg: string; icon: Lucide
     iconBg: 'bg-violet-100 text-violet-600 dark:bg-violet-500/20 dark:text-violet-400',
     icon: GitBranch,
     color: '#8b5cf6',
+  },
+  detail: {
+    accent: 'bg-teal-500',
+    iconBg: 'bg-teal-100 text-teal-600 dark:bg-teal-500/20 dark:text-teal-400',
+    icon: LayoutList,
+    color: '#14b8a6',
   },
 };
 

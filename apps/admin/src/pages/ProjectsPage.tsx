@@ -16,7 +16,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Plus, FolderKanban, Users, Trash2, ClipboardList, Home, Search, ArrowUpDown, Clock, X } from 'lucide-react';
+import { Plus, FolderKanban, Users, Trash2, ClipboardList, Home, UtensilsCrossed, Search, ArrowUpDown, Clock, X } from 'lucide-react';
 
 interface TemplateSummary {
   id: string;
@@ -58,6 +58,13 @@ function TemplateIllustration({ templateId }: { templateId: string }) {
     return (
       <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-orange-600 flex items-center justify-center shadow-md shadow-rose-500/20">
         <Home className="w-5 h-5 text-white" />
+      </div>
+    );
+  }
+  if (templateId === 'restaurant') {
+    return (
+      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center shadow-md shadow-orange-500/20">
+        <UtensilsCrossed className="w-5 h-5 text-white" />
       </div>
     );
   }

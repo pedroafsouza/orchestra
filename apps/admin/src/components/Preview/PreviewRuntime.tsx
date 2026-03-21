@@ -12,7 +12,8 @@ interface PreviewRuntimeProps {
   backgroundColor: string;
   breakpoint: Breakpoint;
   datasourceData: Map<string, Record<string, any>[]>;
-  onNavigate: (nodeId: string) => void;
+  navigationContext?: Record<string, any>;
+  onNavigate: (nodeId: string, entry?: Record<string, any>) => void;
   onAction: (action: {
     type: string;
     payload: any;
@@ -29,7 +30,7 @@ interface RuntimeComponentProps {
   checkedValues: Record<string, boolean>;
   onFormChange: (componentId: string, value: string) => void;
   onCheckedChange: (componentId: string, value: boolean) => void;
-  onNavigate: (nodeId: string) => void;
+  onNavigate: (nodeId: string, entry?: Record<string, any>) => void;
   onAction: (action: {
     type: string;
     payload: any;
@@ -144,12 +145,12 @@ function RuntimeComponent({
           role="button"
           tabIndex={0}
           onClick={() => {
-            if (props.navigateTo) onNavigate(props.navigateTo);
+            if (props.navigateTo) onNavigate(props.navigateTo, entry);
             executeActions();
           }}
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {
-              if (props.navigateTo) onNavigate(props.navigateTo);
+              if (props.navigateTo) onNavigate(props.navigateTo, entry);
               executeActions();
             }
           }}
@@ -172,7 +173,21 @@ function RuntimeComponent({
 
     // ── Image ─────────────────────────────────────────────────────────────
     case 'image': {
-      const src = resolveProp('src', component, entry);
+      let src = resolveProp('src', component, entry);
+      if (typeof src === 'string' && entry) {
+        src = interpolate(src, entry);
+      }
+      // Fallback: if src is still empty and we have a navigation context entry,
+      // try common image field names
+      if (!src && entry) {
+        const imageFields = ['imageUrl', 'image', 'photo', 'thumbnail', 'src', 'url', 'coverImage', 'avatar'];
+        for (const field of imageFields) {
+          if (entry[field] && typeof entry[field] === 'string') {
+            src = entry[field];
+            break;
+          }
+        }
+      }
       return src ? (
         <img
           src={src}
@@ -765,6 +780,213 @@ function RuntimeComponent({
       );
     }
 
+    // ── Switch / Toggle ─────────────────────────────────────────────────
+    case 'switch': {
+      const isOn = checkedValues[component.id] ?? props.checked ?? false;
+      return (
+        <label
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            cursor: 'pointer',
+            color: '#f8fafc',
+            fontSize: 14,
+            userSelect: 'none',
+            ...resolveStyle(component, breakpoint),
+          }}
+        >
+          <div
+            role="switch"
+            aria-checked={isOn}
+            onClick={() => {
+              onCheckedChange(component.id, !isOn);
+              if (component.actions) {
+                for (const action of component.actions) {
+                  onAction({
+                    type: action.type,
+                    payload: { ...action, checked: !isOn, entry },
+                    formValues,
+                  });
+                }
+              }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onCheckedChange(component.id, !isOn);
+              }
+            }}
+            tabIndex={0}
+            style={{
+              width: 44,
+              height: 24,
+              borderRadius: 12,
+              backgroundColor: isOn ? '#6366f1' : '#334155',
+              position: 'relative',
+              transition: 'background-color 0.2s',
+              cursor: 'pointer',
+              flexShrink: 0,
+            }}
+          >
+            <div
+              style={{
+                width: 18,
+                height: 18,
+                borderRadius: '50%',
+                backgroundColor: '#f8fafc',
+                position: 'absolute',
+                top: 3,
+                left: isOn ? 23 : 3,
+                transition: 'left 0.2s',
+              }}
+            />
+          </div>
+          {props.label || 'Toggle'}
+        </label>
+      );
+    }
+
+    // ── Date Picker ───────────────────────────────────────────────────────
+    case 'date_picker':
+      return (
+        <div style={{ ...resolveStyle(component, breakpoint) }}>
+          {props.label && (
+            <label
+              style={{
+                display: 'block',
+                color: '#94a3b8',
+                fontSize: 12,
+                marginBottom: 4,
+              }}
+            >
+              {props.label}
+            </label>
+          )}
+          <input
+            type="date"
+            value={formValues[component.id] ?? ''}
+            onChange={(e) => onFormChange(component.id, e.target.value)}
+            placeholder={props.placeholder || 'Select date...'}
+            style={{
+              width: '100%',
+              padding: '10px 12px',
+              backgroundColor: '#1e293b',
+              border: '1px solid #334155',
+              borderRadius: 8,
+              color: '#f8fafc',
+              fontSize: 14,
+              boxSizing: 'border-box',
+              outline: 'none',
+              colorScheme: 'dark',
+            }}
+          />
+        </div>
+      );
+
+    // ── Slider ────────────────────────────────────────────────────────────
+    case 'slider': {
+      const sliderVal = formValues[component.id] ?? String(props.value ?? 50);
+      return (
+        <div style={{ ...resolveStyle(component, breakpoint) }}>
+          {props.label && (
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'baseline',
+                marginBottom: 6,
+              }}
+            >
+              <label style={{ color: '#94a3b8', fontSize: 12 }}>
+                {props.label}
+              </label>
+              <span style={{ color: '#f8fafc', fontSize: 13, fontWeight: 600 }}>
+                {sliderVal}
+              </span>
+            </div>
+          )}
+          <input
+            type="range"
+            min={props.min ?? 0}
+            max={props.max ?? 100}
+            step={props.step ?? 1}
+            value={sliderVal}
+            onChange={(e) => onFormChange(component.id, e.target.value)}
+            style={{
+              width: '100%',
+              accentColor: '#6366f1',
+              cursor: 'pointer',
+            }}
+          />
+        </div>
+      );
+    }
+
+    // ── Tab Bar ───────────────────────────────────────────────────────────
+    case 'tab_bar': {
+      const items = (props.items as { label: string; icon?: string }[]) || [];
+      const activeIdx = props.activeIndex ?? 0;
+      const TAB_ICONS: Record<string, string> = {
+        home: '\u{1F3E0}',
+        search: '\u{1F50D}',
+        user: '\u{1F464}',
+        profile: '\u{1F464}',
+        settings: '\u{2699}',
+        heart: '\u{2764}',
+        star: '\u{2B50}',
+        cart: '\u{1F6D2}',
+        bell: '\u{1F514}',
+        chat: '\u{1F4AC}',
+      };
+      return (
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-around',
+            backgroundColor: '#1e293b',
+            borderTop: '1px solid #334155',
+            padding: '8px 0 10px',
+            ...resolveStyle(component, breakpoint),
+          }}
+        >
+          {items.map((item, i) => (
+            <div
+              key={i}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 2,
+                flex: 1,
+                cursor: 'pointer',
+              }}
+            >
+              <span style={{ fontSize: 18 }}>
+                {TAB_ICONS[item.icon || ''] || '\u{25CF}'}
+              </span>
+              <span
+                style={{
+                  fontSize: 10,
+                  fontWeight: i === activeIdx ? 600 : 400,
+                  color: i === activeIdx ? '#6366f1' : '#94a3b8',
+                }}
+              >
+                {item.label}
+              </span>
+            </div>
+          ))}
+          {items.length === 0 && (
+            <span style={{ color: '#475569', fontSize: 11, padding: 8 }}>
+              Tab Bar — add items
+            </span>
+          )}
+        </div>
+      );
+    }
+
     // ── Unknown ───────────────────────────────────────────────────────────
     default:
       return (
@@ -782,6 +1004,7 @@ export function PreviewRuntime({
   backgroundColor,
   breakpoint,
   datasourceData,
+  navigationContext,
   onNavigate,
   onAction,
 }: PreviewRuntimeProps) {
@@ -822,6 +1045,7 @@ export function PreviewRuntime({
           component={comp}
           breakpoint={breakpoint}
           datasourceData={datasourceData}
+          entry={navigationContext}
           formValues={formValues}
           checkedValues={checkedValues}
           onFormChange={handleFormChange}

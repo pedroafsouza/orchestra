@@ -81,6 +81,10 @@ export const ScreenComponentType = z.enum([
   'price_tag',
   'map_view',
   'chip',
+  'switch',
+  'date_picker',
+  'slider',
+  'tab_bar',
 ]);
 export type ScreenComponentType = z.infer<typeof ScreenComponentType>;
 
@@ -167,6 +171,10 @@ export const COMPONENT_DEFAULTS: Record<ScreenComponentType, { props: Record<str
   price_tag: { props: { amount: 99, currency: '$', period: '/night' }, label: 'Price Tag', icon: '\u{1F4B0}' },
   map_view: { props: { lat: 0, lng: 0, zoom: 12, height: 200, markers: [] }, label: 'Map View', icon: '\u{1F5FA}' },
   chip: { props: { label: 'Tag', variant: 'outline' }, label: 'Chip', icon: '\u{1F3F7}' },
+  switch: { props: { label: 'Toggle', checked: false }, label: 'Switch', icon: '\u{1F504}' },
+  date_picker: { props: { label: 'Date', placeholder: 'Select date...' }, label: 'Date Picker', icon: '\u{1F4C5}' },
+  slider: { props: { min: 0, max: 100, step: 1, value: 50, label: 'Slider' }, label: 'Slider', icon: '\u{1F39A}' },
+  tab_bar: { props: { items: [{ label: 'Home', icon: 'home' }, { label: 'Search', icon: 'search' }, { label: 'Profile', icon: 'user' }], activeIndex: 0 }, label: 'Tab Bar', icon: '\u{1F4F1}' },
 };
 
 // ─── Screen Definition (per node) ────────────────────────────────────────────

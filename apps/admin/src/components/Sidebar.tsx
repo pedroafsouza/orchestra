@@ -1,6 +1,6 @@
 import { useFlowStore, type OrchestraNodeData } from '@/store/flowStore';
 import type { NodeType, OrchestraAction, ActionTrigger, ActionType } from '@orchestra/shared';
-import { Home, List, FileText, Map, Images, GitBranch, Plus, Trash2 } from 'lucide-react';
+import { Home, List, FileText, Map, Images, GitBranch, LayoutList, Plus, Trash2 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,7 @@ const NODE_TYPES: { type: NodeType; label: string; icon: LucideIcon }[] = [
   { type: 'map', label: 'Map', icon: Map },
   { type: 'photo_gallery', label: 'Gallery', icon: Images },
   { type: 'decision', label: 'Decision', icon: GitBranch },
+  { type: 'detail', label: 'Detail', icon: LayoutList },
 ];
 
 const TRIGGERS: ActionTrigger[] = ['onLoad', 'onPress', 'onValueChange'];
@@ -35,12 +36,7 @@ function NodePalette() {
             variant="secondary"
             size="sm"
             className="justify-start gap-2 text-xs font-medium"
-            onClick={() =>
-              addNode(type, {
-                x: 250 + Math.random() * 200,
-                y: 150 + Math.random() * 200,
-              })
-            }
+            onClick={() => addNode(type, { x: 0, y: 0 })}
           >
             <Icon className="w-3.5 h-3.5 opacity-60" />
             {label}

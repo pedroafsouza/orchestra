@@ -1,7 +1,6 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '@/lib/api';
-import { PreviewRuntime } from '@/components/Preview/PreviewRuntime';
 import { DeviceFrame } from '@/components/Preview/DeviceFrame';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,97 +9,39 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { ArrowLeft, Smartphone, Tablet, Monitor, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { OrchestraNodeData } from '@/store/flowStore';
-import type { Node, Edge } from '@xyflow/react';
+import type { Node } from '@xyflow/react';
 
 type Breakpoint = 'phone' | 'tablet' | 'desktop';
 
-interface DatasourceEntry {
-  id: string;
-  [key: string]: any;
-}
-
-interface Datasource {
-  id: string;
-  name: string;
-}
+const EXPO_BASE_URL = 'http://localhost:8081';
 
 export function PreviewPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const [nodes, setNodes] = useState<Node<OrchestraNodeData>[]>([]);
-  const [edges, setEdges] = useState<Edge[]>([]);
-  const [currentNodeId, setCurrentNodeId] = useState<string | null>(null);
-  const [datasourceData, setDatasourceData] = useState<Map<string, DatasourceEntry[]>>(new Map());
   const [projectName, setProjectName] = useState('');
+  const [projectGuid, setProjectGuid] = useState('');
   const [breakpoint, setBreakpoint] = useState<Breakpoint>('phone');
   const [loading, setLoading] = useState(true);
-  const [transitioning, setTransitioning] = useState(false);
-  const [direction, setDirection] = useState<'left' | 'right'>('left');
-  const transitionTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const entryNodeId = useRef<string | null>(null);
-
-  const navigateToNode = useCallback(
-    (targetNodeId: string, dir: 'left' | 'right' = 'left') => {
-      if (targetNodeId === currentNodeId) return;
-      if (transitionTimeout.current) clearTimeout(transitionTimeout.current);
-      setTransitioning(true);
-      setDirection(dir);
-      transitionTimeout.current = setTimeout(() => {
-        setCurrentNodeId(targetNodeId);
-        setTransitioning(false);
-        transitionTimeout.current = null;
-      }, 200);
-    },
-    [currentNodeId]
-  );
+  const [iframeKey, setIframeKey] = useState(0);
 
   useEffect(() => {
     if (!projectId) return;
 
     async function load() {
       try {
-        const [project, diagram, datasources] = await Promise.all([
-          api<{ name: string }>(`/api/projects/${projectId}`),
-          api<{ nodes: Node<OrchestraNodeData>[]; edges: Edge[] }>(
+        const [project, diagram] = await Promise.all([
+          api<{ name: string; guid: string }>(`/api/projects/${projectId}`),
+          api<{ nodes: Node<OrchestraNodeData>[] }>(
             `/api/projects/${projectId}/diagram`
           ),
-          api<Datasource[]>(`/api/projects/${projectId}/datasources`),
         ]);
 
         setProjectName(project.name);
+        setProjectGuid(project.guid);
         setNodes(diagram.nodes || []);
-        setEdges(diagram.edges || []);
-
-        // Find entry node: first node with nodeType 'landing', or the first node
-        const entryNode =
-          (diagram.nodes || []).find(
-            (n: Node<OrchestraNodeData>) => n.data.nodeType === 'landing'
-          ) || (diagram.nodes || [])[0];
-        if (entryNode) {
-          setCurrentNodeId(entryNode.id);
-          entryNodeId.current = entryNode.id;
-        }
-
-        // Load entries for each datasource
-        const dsMap = new Map<string, DatasourceEntry[]>();
-        await Promise.all(
-          (datasources || []).map(async (ds: Datasource) => {
-            try {
-              const entries = await api<{ id: string; data: Record<string, any> }[]>(
-                `/api/projects/${projectId}/datasources/${ds.id}/entries`
-              );
-              // Flatten: merge entry.data fields to top level so runtime can access entry.title etc.
-              dsMap.set(
-                ds.id,
-                (entries || []).map((e) => ({ id: e.id, ...e.data }))
-              );
-            } catch {
-              dsMap.set(ds.id, []);
-            }
-          })
-        );
-        setDatasourceData(dsMap);
       } catch (err) {
         console.error('[PreviewPage] failed to load:', err);
       } finally {
@@ -111,44 +52,13 @@ export function PreviewPage() {
     load();
   }, [projectId]);
 
-  const handleAction = useCallback(
-    (action: { type: string; datasourceId?: string; entryId?: string; values?: Record<string, any> }) => {
-      if (action.type === 'NAVIGATE' && action.values?.nodeId) {
-        navigateToNode(action.values.nodeId, 'left');
-        return;
-      }
+  const handleReset = useCallback(() => {
+    setIframeKey((k) => k + 1);
+  }, []);
 
-      if (action.type === 'DATASOURCE_ADD' && action.datasourceId && action.values) {
-        setDatasourceData((prev) => {
-          const next = new Map(prev);
-          const entries = [...(next.get(action.datasourceId!) || [])];
-          entries.push({ id: crypto.randomUUID(), ...action.values });
-          next.set(action.datasourceId!, entries);
-          return next;
-        });
-        return;
-      }
-
-      if (action.type === 'DATASOURCE_UPDATE' && action.datasourceId && action.entryId && action.values) {
-        setDatasourceData((prev) => {
-          const next = new Map(prev);
-          const entries = (next.get(action.datasourceId!) || []).map((entry) =>
-            entry.id === action.entryId ? { ...entry, ...action.values } : entry
-          );
-          next.set(action.datasourceId!, entries);
-          return next;
-        });
-        return;
-      }
-    },
-    [navigateToNode]
-  );
-
-  const currentNode = nodes.find((n) => n.id === currentNodeId);
-  const screenDef = currentNode?.data?.props?.screenDefinition ?? {
-    rootComponents: [],
-    backgroundColor: undefined,
-  };
+  const previewUrl = projectGuid
+    ? `${EXPO_BASE_URL}/preview/${projectGuid}`
+    : '';
 
   if (loading) {
     return (
@@ -179,9 +89,7 @@ export function PreviewPage() {
             variant="ghost"
             size="sm"
             className="gap-1.5 text-muted-foreground"
-            onClick={() => {
-              if (entryNodeId.current) navigateToNode(entryNodeId.current, 'right');
-            }}
+            onClick={handleReset}
           >
             <RotateCcw className="h-3.5 w-3.5" />
             Reset
@@ -224,44 +132,39 @@ export function PreviewPage() {
             Screens
           </p>
           {nodes.map((node) => (
-            <button
+            <div
               key={node.id}
               className={cn(
-                'w-full text-left text-sm px-3 py-2 rounded-md mb-1 transition-colors',
-                currentNodeId === node.id
-                  ? 'bg-primary/10 text-primary font-medium'
-                  : 'text-foreground hover:bg-secondary'
+                'w-full text-left text-sm px-3 py-2 rounded-md mb-1',
+                'text-foreground'
               )}
-              onClick={() => navigateToNode(node.id, 'left')}
             >
               {node.data.label}
-            </button>
+            </div>
           ))}
         </aside>
 
         {/* Preview area */}
         <div className="flex-1 flex items-center justify-center bg-secondary p-6">
-          <DeviceFrame breakpoint={breakpoint} backgroundColor={screenDef.backgroundColor}>
-            <div
-              style={{
-                transition: 'transform 0.2s ease-out, opacity 0.2s ease-out',
-                transform: transitioning
-                  ? direction === 'left'
-                    ? 'translateX(-20px)'
-                    : 'translateX(20px)'
-                  : 'translateX(0)',
-                opacity: transitioning ? 0 : 1,
-              }}
-            >
-              <PreviewRuntime
-                rootComponents={screenDef.rootComponents || []}
-                backgroundColor={screenDef.backgroundColor}
-                breakpoint={breakpoint}
-                datasourceData={datasourceData}
-                onNavigate={(nodeId: string) => navigateToNode(nodeId, 'left')}
-                onAction={handleAction}
+          <DeviceFrame breakpoint={breakpoint} backgroundColor="#0f172a">
+            {previewUrl ? (
+              <iframe
+                key={iframeKey}
+                ref={iframeRef}
+                src={previewUrl}
+                title="Orchestra Preview"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  border: 'none',
+                  backgroundColor: '#0f172a',
+                }}
               />
-            </div>
+            ) : (
+              <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+                No preview available
+              </div>
+            )}
           </DeviceFrame>
         </div>
       </div>

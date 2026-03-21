@@ -17,7 +17,11 @@ import {
   FileText,
   Link,
   MapPin,
+  Settings2,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -79,10 +83,12 @@ export function DatasourcesPage() {
   const [searchQuery, setSearchQuery] = useState('');
 
   const [showCreate, setShowCreate] = useState(false);
+  const [showSchema, setShowSchema] = useState(false);
   const [newName, setNewName] = useState('');
   const [newFields, setNewFields] = useState<DatasourceField[]>([
     { key: 'title', label: 'Title', type: 'text' },
   ]);
+  const { toast } = useToast();
 
   useEffect(() => {
     api(`/api/projects/${projectId}/datasources`)
@@ -178,6 +184,40 @@ export function DatasourcesPage() {
       { method: 'DELETE' }
     );
     setEntries((prev) => prev.filter((e) => e.id !== entryId));
+  };
+
+  const handleAddFieldToDs = async (field: DatasourceField) => {
+    if (!selectedDs || !projectId) return;
+    const updatedFields = [...selectedDs.fields, field];
+    try {
+      await api(`/api/projects/${projectId}/datasources/${selectedDs.id}`, {
+        method: 'PUT',
+        body: { fields: updatedFields },
+      });
+      const updated = { ...selectedDs, fields: updatedFields };
+      setSelectedDs(updated);
+      setDatasources((prev) => prev.map((ds) => (ds.id === selectedDs.id ? updated : ds)));
+      toast({ title: `Field "${field.label}" added`, variant: 'success' });
+    } catch (err) {
+      toast({ title: 'Failed to add field', description: String(err), variant: 'destructive' });
+    }
+  };
+
+  const handleRemoveFieldFromDs = async (fieldKey: string) => {
+    if (!selectedDs || !projectId) return;
+    const updatedFields = selectedDs.fields.filter((f) => f.key !== fieldKey);
+    try {
+      await api(`/api/projects/${projectId}/datasources/${selectedDs.id}`, {
+        method: 'PUT',
+        body: { fields: updatedFields },
+      });
+      const updated = { ...selectedDs, fields: updatedFields };
+      setSelectedDs(updated);
+      setDatasources((prev) => prev.map((ds) => (ds.id === selectedDs.id ? updated : ds)));
+      toast({ title: 'Field removed', variant: 'success' });
+    } catch (err) {
+      toast({ title: 'Failed to remove field', description: String(err), variant: 'destructive' });
+    }
   };
 
   if (loading) {
@@ -329,11 +369,99 @@ export function DatasourcesPage() {
                     {entries.length} {entries.length === 1 ? 'row' : 'rows'}
                   </Badge>
                 </div>
-                <Button size="sm" className="gap-1.5" onClick={handleAddEntry}>
-                  <Plus className="w-3 h-3" />
-                  Add Entry
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5"
+                    onClick={() => setShowSchema(!showSchema)}
+                  >
+                    <Settings2 className="w-3 h-3" />
+                    Fields
+                    {showSchema ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                  </Button>
+                  <Button size="sm" className="gap-1.5" onClick={handleAddEntry}>
+                    <Plus className="w-3 h-3" />
+                    Add Entry
+                  </Button>
+                </div>
               </div>
+
+              {/* Schema editor */}
+              {showSchema && (
+                <Card className="mb-4">
+                  <CardContent className="p-4">
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+                      Collection Fields
+                    </h3>
+                    <div className="space-y-2 mb-3">
+                      {(selectedDs.fields as DatasourceField[]).map((f) => {
+                        const IconComponent = FIELD_TYPE_ICONS[f.type];
+                        return (
+                          <div key={f.key} className="flex items-center gap-2 text-sm">
+                            <div className="w-6 flex justify-center">
+                              {IconComponent && <IconComponent className="w-3.5 h-3.5 text-muted-foreground" />}
+                            </div>
+                            <span className="font-mono text-xs text-muted-foreground w-28 truncate">{f.key}</span>
+                            <span className="flex-1 truncate">{f.label}</span>
+                            <Badge variant="secondary" className="text-[10px]">{f.type}</Badge>
+                            <Button
+                              variant="ghost"
+                              size="icon-xs"
+                              className="text-destructive hover:text-destructive"
+                              onClick={() => handleRemoveFieldFromDs(f.key)}
+                            >
+                              <X className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="flex gap-2">
+                      <Input
+                        className="h-7 text-xs flex-1"
+                        placeholder="Field key..."
+                        id="new-field-key"
+                      />
+                      <Input
+                        className="h-7 text-xs flex-1"
+                        placeholder="Label..."
+                        id="new-field-label"
+                      />
+                      <select
+                        className="rounded-md border border-input bg-background text-xs h-7 px-2"
+                        id="new-field-type"
+                        defaultValue="text"
+                      >
+                        {FIELD_TYPES.map((t) => (
+                          <option key={t} value={t}>{t}</option>
+                        ))}
+                      </select>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="gap-1 h-7 text-xs"
+                        onClick={() => {
+                          const keyEl = document.getElementById('new-field-key') as HTMLInputElement;
+                          const labelEl = document.getElementById('new-field-label') as HTMLInputElement;
+                          const typeEl = document.getElementById('new-field-type') as HTMLSelectElement;
+                          if (!keyEl.value.trim() || !labelEl.value.trim()) return;
+                          handleAddFieldToDs({
+                            key: keyEl.value.trim(),
+                            label: labelEl.value.trim(),
+                            type: typeEl.value as DatasourceFieldType,
+                          });
+                          keyEl.value = '';
+                          labelEl.value = '';
+                        }}
+                      >
+                        <Plus className="w-3 h-3" />
+                        Add
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Search bar */}
               <div className="relative mb-4">

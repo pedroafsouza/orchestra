@@ -18,8 +18,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { ArrowLeft, Save, Trash2, Copy, Check } from 'lucide-react';
+import { ArrowLeft, Save, Trash2, Copy, Check, RotateCcw, Clock, Rocket } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+
+interface FlowVersion {
+  id: string;
+  version: number;
+  published: boolean;
+  createdAt: string;
+  name: string;
+}
 
 export function SettingsPage() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -29,14 +37,20 @@ export function SettingsPage() {
   const [name, setName] = useState('');
   const [showDelete, setShowDelete] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [flowVersions, setFlowVersions] = useState<FlowVersion[]>([]);
+  const [republishing, setRepublishing] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
     if (!projectId) return;
-    api(`/api/projects/${projectId}`)
-      .then((p) => {
+    Promise.all([
+      api(`/api/projects/${projectId}`),
+      api<FlowVersion[]>(`/api/projects/${projectId}/flows`).catch(() => []),
+    ])
+      .then(([p, flows]) => {
         setCurrentProject(p);
         setName(p.name);
+        setFlowVersions((flows || []).sort((a: FlowVersion, b: FlowVersion) => b.version - a.version));
       })
       .catch(() => navigate('/'))
       .finally(() => setLoading(false));
@@ -63,6 +77,21 @@ export function SettingsPage() {
       navigate('/');
     } catch (err) {
       toast({ title: 'Failed to delete', description: String(err), variant: 'destructive' });
+    }
+  };
+
+  const handleRepublish = async (flowId: string, version: number) => {
+    setRepublishing(flowId);
+    try {
+      await api(`/api/flow/${flowId}/publish`, { method: 'POST' });
+      // Refresh versions
+      const flows = await api<FlowVersion[]>(`/api/projects/${projectId}/flows`);
+      setFlowVersions((flows || []).sort((a: FlowVersion, b: FlowVersion) => b.version - a.version));
+      toast({ title: `Version ${version} republished`, variant: 'success' });
+    } catch (err) {
+      toast({ title: 'Failed to republish', description: String(err), variant: 'destructive' });
+    } finally {
+      setRepublishing(null);
     }
   };
 
@@ -143,6 +172,55 @@ export function SettingsPage() {
             </p>
           </CardContent>
         </Card>
+
+        {/* Deploy History */}
+        {flowVersions.length > 0 && (
+          <Card>
+            <CardContent className="p-6 space-y-4">
+              <div className="flex items-center gap-2">
+                <Rocket className="w-5 h-5 text-primary" />
+                <h2 className="text-lg font-semibold">Deploy History</h2>
+              </div>
+              <div className="divide-y divide-border rounded-lg border overflow-hidden">
+                {flowVersions.map((flow) => (
+                  <div
+                    key={flow.id}
+                    className="flex items-center justify-between px-4 py-3 text-sm"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="font-mono font-medium">v{flow.version}</span>
+                      {flow.published && (
+                        <span className="text-[10px] font-semibold uppercase tracking-wider bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                          Live
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {new Date(flow.createdAt).toLocaleString()}
+                      </span>
+                      {!flow.published && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={republishing === flow.id}
+                          onClick={() => handleRepublish(flow.id, flow.version)}
+                        >
+                          <RotateCcw className="w-3 h-3 mr-1" />
+                          {republishing === flow.id ? 'Publishing...' : 'Rollback'}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Click "Rollback" to republish a previous version.
+              </p>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Danger Zone */}
         <Card className="border-destructive/30">

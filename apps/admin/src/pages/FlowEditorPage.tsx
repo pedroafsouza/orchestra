@@ -35,11 +35,30 @@ export function FlowEditorPage() {
   const onConnect = useFlowStore((s) => s.onConnect);
   const setSelectedNode = useFlowStore((s) => s.setSelectedNode);
 
+  const undo = useFlowStore((s) => s.undo);
+  const redo = useFlowStore((s) => s.redo);
+
   const [screenBuilderNodeId, setScreenBuilderNodeId] = useState<string | null>(null);
 
   useEffect(() => {
     if (projectId) loadDiagram(projectId);
   }, [projectId]);
+
+  // Keyboard shortcuts for undo/redo
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
+        e.preventDefault();
+        if (e.shiftKey) {
+          redo();
+        } else {
+          undo();
+        }
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [undo, redo]);
 
   const handleNodeDoubleClick = (_event: React.MouseEvent, node: any) => {
     setScreenBuilderNodeId(node.id);

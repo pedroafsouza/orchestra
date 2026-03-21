@@ -44,10 +44,31 @@ interface FlowState {
   getExportJSON: () => any;
   loadDiagram: (projectId: string) => Promise<void>;
   saveDiagram: () => void;
+  undo: () => void;
+  redo: () => void;
+  canUndo: () => boolean;
+  canRedo: () => boolean;
 }
 
 let nodeIdCounter = 0;
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
+
+// Undo/redo history
+const MAX_HISTORY = 50;
+let undoStack: DiagramState[] = [];
+let redoStack: DiagramState[] = [];
+let isUndoRedo = false;
+
+function pushHistory(state: FlowState) {
+  if (isUndoRedo) return;
+  undoStack.push({
+    nodes: JSON.parse(JSON.stringify(state.nodes)),
+    edges: JSON.parse(JSON.stringify(state.edges)),
+    flowName: state.flowName,
+  });
+  if (undoStack.length > MAX_HISTORY) undoStack.shift();
+  redoStack = [];
+}
 
 function scheduleSave(state: FlowState) {
   if (!state.projectId) return;
@@ -99,32 +120,64 @@ export const useFlowStore = create<FlowState>((set, get) => ({
   saveDiagram: () => scheduleSave(get()),
 
   onNodesChange: (changes) => {
+    // Only push history for significant changes (add/remove), not position drags
+    const hasStructuralChange = changes.some((c) => c.type === 'remove' || c.type === 'add');
+    if (hasStructuralChange) pushHistory(get());
     set({ nodes: applyNodeChanges(changes, get().nodes) as Node<OrchestraNodeData>[] });
     scheduleSave(get());
   },
 
   onEdgesChange: (changes) => {
+    const hasStructuralChange = changes.some((c) => c.type === 'remove' || c.type === 'add');
+    if (hasStructuralChange) pushHistory(get());
     set({ edges: applyEdgeChanges(changes, get().edges) });
     scheduleSave(get());
   },
 
   onConnect: (connection) => {
+    pushHistory(get());
     set({ edges: addEdge(connection, get().edges) });
     scheduleSave(get());
   },
 
   addNode: (type, position) => {
+    pushHistory(get());
     const id = `node_${++nodeIdCounter}`;
-    const { nodes } = get();
-    // Place new nodes to the right of existing ones
+    const { nodes, selectedNodeId } = get();
     let x = position.x;
     let y = position.y;
+
     if (nodes.length > 0) {
-      const maxX = Math.max(...nodes.map((n) => n.position.x));
-      const avgY = nodes.reduce((sum, n) => sum + n.position.y, 0) / nodes.length;
-      x = maxX + 250;
-      y = avgY;
+      // If a node is selected, place the new node to the right of it
+      const referenceNode = selectedNodeId
+        ? nodes.find((n) => n.id === selectedNodeId)
+        : null;
+
+      if (referenceNode) {
+        x = referenceNode.position.x + 280;
+        y = referenceNode.position.y;
+      } else {
+        // Place to the right of all existing nodes, vertically centered
+        const maxX = Math.max(...nodes.map((n) => n.position.x));
+        const avgY = nodes.reduce((sum, n) => sum + n.position.y, 0) / nodes.length;
+        x = maxX + 280;
+        y = avgY;
+      }
+
+      // Avoid overlapping: nudge down if another node is too close
+      const tooClose = nodes.some(
+        (n) => Math.abs(n.position.x - x) < 200 && Math.abs(n.position.y - y) < 100
+      );
+      if (tooClose) {
+        const maxY = Math.max(...nodes.filter((n) => Math.abs(n.position.x - x) < 200).map((n) => n.position.y));
+        y = maxY + 180;
+      }
+    } else {
+      // First node — center of canvas
+      x = 250;
+      y = 150;
     }
+
     const newNode: Node<OrchestraNodeData> = {
       id,
       type: 'orchestra',
@@ -136,7 +189,7 @@ export const useFlowStore = create<FlowState>((set, get) => ({
         actions: [],
       },
     };
-    set({ nodes: [...nodes, newNode] });
+    set({ nodes: [...nodes, newNode], selectedNodeId: id });
     scheduleSave(get());
   },
 
@@ -178,4 +231,37 @@ export const useFlowStore = create<FlowState>((set, get) => ({
       })),
     };
   },
+
+  undo: () => {
+    if (undoStack.length === 0) return;
+    const current = get();
+    redoStack.push({
+      nodes: JSON.parse(JSON.stringify(current.nodes)),
+      edges: JSON.parse(JSON.stringify(current.edges)),
+      flowName: current.flowName,
+    });
+    const prev = undoStack.pop()!;
+    isUndoRedo = true;
+    set({ nodes: prev.nodes, edges: prev.edges, flowName: prev.flowName });
+    isUndoRedo = false;
+    scheduleSave(get());
+  },
+
+  redo: () => {
+    if (redoStack.length === 0) return;
+    const current = get();
+    undoStack.push({
+      nodes: JSON.parse(JSON.stringify(current.nodes)),
+      edges: JSON.parse(JSON.stringify(current.edges)),
+      flowName: current.flowName,
+    });
+    const next = redoStack.pop()!;
+    isUndoRedo = true;
+    set({ nodes: next.nodes, edges: next.edges, flowName: next.flowName });
+    isUndoRedo = false;
+    scheduleSave(get());
+  },
+
+  canUndo: () => undoStack.length > 0,
+  canRedo: () => redoStack.length > 0,
 }));

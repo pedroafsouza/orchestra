@@ -23,6 +23,10 @@ import {
   MapPin,
   Video,
   CheckSquare,
+  ToggleLeft,
+  Calendar,
+  SlidersHorizontal,
+  PanelBottom,
   Search,
   Layers,
   LayoutGrid,
@@ -57,6 +61,10 @@ const COMPONENT_ICONS: Record<string, LucideIcon> = {
   price_tag: DollarSign,
   map_view: MapPin,
   chip: TagIcon,
+  switch: ToggleLeft,
+  date_picker: Calendar,
+  slider: SlidersHorizontal,
+  tab_bar: PanelBottom,
 };
 
 const CATEGORIES: { label: string; types: ScreenComponentType[] }[] = [
@@ -70,11 +78,11 @@ const CATEGORIES: { label: string; types: ScreenComponentType[] }[] = [
   },
   {
     label: 'Inputs',
-    types: ['input', 'combobox', 'checkbox'],
+    types: ['input', 'combobox', 'checkbox', 'switch', 'date_picker', 'slider'],
   },
   {
     label: 'Layout',
-    types: ['container', 'card', 'horizontal_scroll', 'carousel', 'hero'],
+    types: ['container', 'card', 'horizontal_scroll', 'carousel', 'hero', 'tab_bar'],
   },
   {
     label: 'Data & Media',

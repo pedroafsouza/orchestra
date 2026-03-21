@@ -9,7 +9,7 @@ const CreateDatasourceSchema = z.object({
     z.object({
       key: z.string(),
       label: z.string(),
-      type: z.enum(['text', 'number', 'image_url', 'boolean', 'date', 'rich_text', 'url']),
+      type: z.enum(['text', 'number', 'image_url', 'boolean', 'date', 'rich_text', 'url', 'geolocation']),
       required: z.boolean().optional(),
     })
   ),

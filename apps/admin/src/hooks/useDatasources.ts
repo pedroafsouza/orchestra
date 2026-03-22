@@ -1,18 +1,34 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '@/lib/api';
 import { useToast } from '@/components/ui/use-toast';
-import type { DatasourceField, DatasourceFieldType } from '@orchestra/shared';
+import type { DatasourceField, DatasourceFieldType, RestSourceConfig } from '@orchestra/shared';
 
-interface Datasource {
+export interface Datasource {
   id: string;
   name: string;
   fields: DatasourceField[];
+  sourceType: 'manual' | 'rest';
+  sourceConfig?: RestSourceConfig;
+  lastFetchAt?: string;
+  lastFetchStatus?: string | null;
+  lastFetchError?: string | null;
   _count?: { entries: number };
 }
 
-interface Entry {
+export interface Entry {
   id: string;
   data: Record<string, any>;
+}
+
+export interface TestRestResponse {
+  success: boolean;
+  statusCode: number;
+  responseTime: number;
+  data: any[];
+  rawResponse: any;
+  detectedFields: Array<{ key: string; label: string; type: string }>;
+  totalItems: number;
+  error: string | null;
 }
 
 export function useDatasources(projectId: string | undefined) {
@@ -28,6 +44,19 @@ export function useDatasources(projectId: string | undefined) {
   const [newFields, setNewFields] = useState<DatasourceField[]>([
     { key: 'title', label: 'Title', type: 'text' },
   ]);
+
+  // Wizard state
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const [wizardStep, setWizardStep] = useState(0);
+  const [wizardSourceType, setWizardSourceType] = useState<'manual' | 'rest'>('manual');
+  const [restConfig, setRestConfig] = useState<RestSourceConfig | null>(null);
+  const [testResult, setTestResult] = useState<TestRestResponse | null>(null);
+  const [testLoading, setTestLoading] = useState(false);
+  const [fetchLoading, setFetchLoading] = useState(false);
+
+  // Edit REST config state
+  const [editingRestConfig, setEditingRestConfig] = useState(false);
+
   const { toast } = useToast();
 
   useEffect(() => {
@@ -74,6 +103,140 @@ export function useDatasources(projectId: string | undefined) {
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Failed');
     }
+  };
+
+  const handleCreateRestDs = async (
+    name: string,
+    config: RestSourceConfig,
+    fields: DatasourceField[]
+  ) => {
+    try {
+      const ds = await api(`/api/projects/${projectId}/datasources`, {
+        method: 'POST',
+        body: {
+          name,
+          fields,
+          sourceType: 'rest',
+          sourceConfig: config,
+        },
+      });
+      setDatasources((prev) => [...prev, ds]);
+      resetWizard();
+
+      // Immediately fetch data
+      try {
+        setFetchLoading(true);
+        const result = await api(
+          `/api/projects/${projectId}/datasources/${ds.id}/fetch`,
+          { method: 'POST' }
+        );
+        // Reload datasources to get updated fetch status
+        const updatedDs = await api(`/api/projects/${projectId}/datasources`);
+        setDatasources(updatedDs);
+        // Auto-select the new datasource
+        const newDs = updatedDs.find((d: Datasource) => d.id === ds.id);
+        if (newDs) {
+          await loadEntries(newDs);
+        }
+        toast({ title: `Fetched ${result.entriesCreated} entries`, variant: 'success' });
+      } catch (fetchErr) {
+        toast({
+          title: 'Datasource created, but initial fetch failed',
+          description: String(fetchErr),
+          variant: 'destructive',
+        });
+      } finally {
+        setFetchLoading(false);
+      }
+    } catch (err) {
+      toast({
+        title: 'Failed to create datasource',
+        description: err instanceof Error ? err.message : 'Unknown error',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleTestRest = async (config: RestSourceConfig): Promise<TestRestResponse> => {
+    setTestLoading(true);
+    try {
+      const result = await api<TestRestResponse>(
+        `/api/projects/${projectId}/datasources/test-rest`,
+        { method: 'POST', body: config }
+      );
+      setTestResult(result);
+      return result;
+    } finally {
+      setTestLoading(false);
+    }
+  };
+
+  const handleFetchDs = async (dsId: string) => {
+    setFetchLoading(true);
+    try {
+      const result = await api(
+        `/api/projects/${projectId}/datasources/${dsId}/fetch`,
+        { method: 'POST' }
+      );
+      // Reload datasource list to update status
+      const updatedDs = await api(`/api/projects/${projectId}/datasources`);
+      setDatasources(updatedDs);
+      // Refresh entries
+      const ds = updatedDs.find((d: Datasource) => d.id === dsId);
+      if (ds) {
+        setSelectedDs(ds);
+        const newEntries = await api(
+          `/api/projects/${projectId}/datasources/${dsId}/entries`
+        );
+        setEntries(newEntries);
+      }
+      if (result.success) {
+        toast({ title: `Fetched ${result.entriesCreated} entries`, variant: 'success' });
+      } else {
+        toast({ title: 'Fetch failed', description: result.error, variant: 'destructive' });
+      }
+    } catch (err) {
+      toast({
+        title: 'Fetch failed',
+        description: err instanceof Error ? err.message : 'Unknown error',
+        variant: 'destructive',
+      });
+    } finally {
+      setFetchLoading(false);
+    }
+  };
+
+  const handleUpdateRestConfig = async (dsId: string, config: RestSourceConfig) => {
+    try {
+      await api(`/api/projects/${projectId}/datasources/${dsId}`, {
+        method: 'PUT',
+        body: { sourceConfig: config },
+      });
+      // Reload datasources
+      const updatedDs = await api(`/api/projects/${projectId}/datasources`);
+      setDatasources(updatedDs);
+      const ds = updatedDs.find((d: Datasource) => d.id === dsId);
+      if (ds) setSelectedDs(ds);
+      setEditingRestConfig(false);
+      toast({ title: 'REST configuration updated', variant: 'success' });
+    } catch (err) {
+      toast({
+        title: 'Failed to update config',
+        description: err instanceof Error ? err.message : 'Unknown error',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const resetWizard = () => {
+    setWizardOpen(false);
+    setWizardStep(0);
+    setWizardSourceType('manual');
+    setRestConfig(null);
+    setTestResult(null);
+    setNewName('');
+    setNewFields([{ key: 'title', label: 'Title', type: 'text' }]);
+    setShowCreate(false);
   };
 
   const addField = () => {
@@ -175,6 +338,7 @@ export function useDatasources(projectId: string | undefined) {
     newName,
     setNewName,
     newFields,
+    setNewFields,
     addField,
     updateField,
     removeField,
@@ -185,5 +349,25 @@ export function useDatasources(projectId: string | undefined) {
     handleDeleteEntry,
     handleAddFieldToDs,
     handleRemoveFieldFromDs,
+    // Multi-source
+    wizardOpen,
+    setWizardOpen,
+    wizardStep,
+    setWizardStep,
+    wizardSourceType,
+    setWizardSourceType,
+    restConfig,
+    setRestConfig,
+    testResult,
+    setTestResult,
+    testLoading,
+    fetchLoading,
+    editingRestConfig,
+    setEditingRestConfig,
+    handleTestRest,
+    handleCreateRestDs,
+    handleFetchDs,
+    handleUpdateRestConfig,
+    resetWizard,
   };
 }

@@ -1,13 +1,8 @@
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Plus } from 'lucide-react';
+import { Plus, Globe } from 'lucide-react';
 
-interface Datasource {
-  id: string;
-  name: string;
-  fields: any[];
-  _count?: { entries: number };
-}
+import type { Datasource } from '@/hooks/useDatasources';
 
 interface DatasourceListProps {
   datasources: Datasource[];
@@ -46,8 +41,13 @@ export function DatasourceList({ datasources, selectedDsId, onSelect, onShowCrea
               }`}
               onClick={() => onSelect(ds)}
             >
-              <span className="font-medium">{ds.name}</span>
-              <span className="text-xs text-muted-foreground ml-2">
+              <div className="flex items-center gap-1.5">
+                <span className="font-medium truncate">{ds.name}</span>
+                {ds.sourceType === 'rest' && (
+                  <Globe className="w-3 h-3 text-primary shrink-0" />
+                )}
+              </div>
+              <span className="text-xs text-muted-foreground">
                 {ds._count?.entries ?? 0} rows
               </span>
             </button>

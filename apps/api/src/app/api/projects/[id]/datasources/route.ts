@@ -13,6 +13,8 @@ const CreateDatasourceSchema = z.object({
       required: z.boolean().optional(),
     })
   ),
+  sourceType: z.enum(['manual', 'rest']).default('manual'),
+  sourceConfig: z.any().optional(),
 });
 
 /** GET — list datasources for a project */
@@ -42,13 +44,15 @@ export async function POST(
 
   try {
     const body = await request.json();
-    const { name, fields } = CreateDatasourceSchema.parse(body);
+    const { name, fields, sourceType, sourceConfig } = CreateDatasourceSchema.parse(body);
 
     const ds = await prisma.datasource.create({
       data: {
         name,
         projectId: params.id,
         fields: fields as any,
+        sourceType,
+        ...(sourceConfig ? { sourceConfig: sourceConfig as any } : {}),
       },
     });
 

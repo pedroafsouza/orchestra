@@ -122,12 +122,17 @@ model Flow {
 // ─── Datasources ─────────────────────────────────────────────────────────────
 
 model Datasource {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  name      String
-  projectId String   @db.ObjectId
-  fields    Json     // Array of { key, label, type: "text"|"number"|"image_url"|"boolean" }
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  name            String
+  projectId       String    @db.ObjectId
+  fields          Json      // Array of { key, label, type: "text"|"number"|"image_url"|"boolean" }
+  sourceType      String    @default("manual") // "manual" | "rest"
+  sourceConfig    Json?     // REST config (url, method, headers, auth, etc.)
+  lastFetchAt     DateTime?
+  lastFetchStatus String?   // "success" | "error" | "pending"
+  lastFetchError  String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   project Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
   entries DatasourceEntry[]

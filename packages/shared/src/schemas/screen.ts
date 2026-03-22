@@ -122,6 +122,40 @@ export const ScreenComponentSchema: z.ZodType<ScreenComponent> = z.lazy(() =>
   })
 );
 
+// ─── Datasource Source Types ─────────────────────────────────────────────────
+
+export const DatasourceSourceType = z.enum(['manual', 'rest']);
+export type DatasourceSourceType = z.infer<typeof DatasourceSourceType>;
+
+export const RestAuthConfigSchema = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('none') }),
+  z.object({ type: z.literal('bearer'), token: z.string() }),
+  z.object({
+    type: z.literal('api_key'),
+    key: z.string(),
+    value: z.string(),
+    in: z.enum(['header', 'query']),
+  }),
+  z.object({
+    type: z.literal('basic'),
+    username: z.string(),
+    password: z.string(),
+  }),
+]);
+export type RestAuthConfig = z.infer<typeof RestAuthConfigSchema>;
+
+export const RestSourceConfigSchema = z.object({
+  url: z.string().url(),
+  method: z.enum(['GET', 'POST', 'PUT', 'PATCH']).default('GET'),
+  headers: z.record(z.string(), z.string()).optional(),
+  queryParams: z.record(z.string(), z.string()).optional(),
+  body: z.string().optional(),
+  auth: RestAuthConfigSchema.default({ type: 'none' }),
+  dataPath: z.string().optional(),
+  refreshIntervalMinutes: z.number().optional(),
+});
+export type RestSourceConfig = z.infer<typeof RestSourceConfigSchema>;
+
 // ─── Datasource Field Definition ─────────────────────────────────────────────
 
 export const DatasourceFieldType = z.enum([

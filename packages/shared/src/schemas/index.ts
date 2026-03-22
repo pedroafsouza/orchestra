@@ -33,6 +33,9 @@ export {
   ScreenComponentSchema,
   DatasourceFieldType,
   DatasourceFieldSchema,
+  DatasourceSourceType,
+  RestAuthConfigSchema,
+  RestSourceConfigSchema,
   ScreenDefinitionSchema,
   COMPONENT_DEFAULTS,
   type Spacing,
@@ -44,5 +47,8 @@ export {
   type DatasourceBinding,
   type ScreenComponent,
   type DatasourceField,
+  type DatasourceSourceType as DatasourceSourceTypeEnum,
+  type RestAuthConfig,
+  type RestSourceConfig,
   type ScreenDefinition,
 } from './screen';

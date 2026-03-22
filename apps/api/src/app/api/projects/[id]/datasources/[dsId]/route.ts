@@ -24,6 +24,7 @@ const UpdateDatasourceSchema = z.object({
       })
     )
     .optional(),
+  sourceConfig: z.any().optional(),
 });
 
 /** PUT — update a datasource (name, fields) */
@@ -43,6 +44,7 @@ export async function PUT(
       data: {
         ...(data.name ? { name: data.name } : {}),
         ...(data.fields ? { fields: data.fields as any } : {}),
+        ...(data.sourceConfig !== undefined ? { sourceConfig: data.sourceConfig as any } : {}),
       },
     });
 

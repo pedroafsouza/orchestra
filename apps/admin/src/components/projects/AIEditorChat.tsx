@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 
 interface ChatMessage {
-  role: 'user' | 'model';
+  role: 'user' | 'assistant';
   content: string;
 }
 
@@ -112,7 +112,7 @@ export function AIEditorChat({
                 setMessages((prev) => [
                   ...prev,
                   {
-                    role: 'model',
+                    role: 'assistant',
                     content: `I've generated **${data.template.name}** — ${data.template.description}`,
                   },
                 ]);

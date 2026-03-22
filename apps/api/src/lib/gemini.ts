@@ -1,7 +1,13 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import OpenAI from 'openai';
 import { TODO_LIST_TEMPLATE } from '@orchestra/shared';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+// DashScope OpenAI-compatible API for Qwen3
+// Get your API key from: https://bailian.console.alibabacloud.com/?apiKey=1
+const apiKey = process.env.DASHSCOPE_API_KEY || '';
+const client = new OpenAI({
+  apiKey,
+  baseURL: 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1',
+});
 
 const SYSTEM_PROMPT = `You are an app generator for Orchestra, a Server-Driven UI platform. Given a user's app description, generate a complete ProjectTemplate JSON object.
 
@@ -152,29 +158,24 @@ ${JSON.stringify(TODO_LIST_TEMPLATE, null, 2)}
 13. All IDs must be unique across the entire template`;
 
 export interface ChatMessage {
-  role: 'user' | 'model';
+  role: 'user' | 'assistant';
   content: string;
 }
 
 export async function generateTemplate(messages: ChatMessage[]) {
-  const model = genAI.getGenerativeModel({
-    model: 'gemini-2.0-flash',
-    generationConfig: {
-      temperature: 0.7,
-      responseMimeType: 'application/json',
-    },
-    systemInstruction: SYSTEM_PROMPT,
+  const stream = await client.chat.completions.create({
+    model: 'qwen3-30b-a3b',
+    temperature: 0.7,
+    response_format: { type: 'json_object' },
+    stream: true,
+    messages: [
+      { role: 'system', content: SYSTEM_PROMPT },
+      ...messages.map((m) => ({
+        role: m.role as 'user' | 'assistant',
+        content: m.content,
+      })),
+    ],
   });
 
-  const chat = model.startChat({
-    history: messages.slice(0, -1).map((m) => ({
-      role: m.role,
-      parts: [{ text: m.content }],
-    })),
-  });
-
-  const lastMessage = messages[messages.length - 1];
-  const result = await chat.sendMessageStream(lastMessage.content);
-
-  return result.stream;
+  return stream;
 }

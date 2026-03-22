@@ -7,7 +7,7 @@ import { ProjectTemplateSchema } from '@orchestra/shared';
 const RequestSchema = z.object({
   messages: z.array(
     z.object({
-      role: z.enum(['user', 'model']),
+      role: z.enum(['user', 'assistant']),
       content: z.string().min(1).max(5000),
     })
   ).min(1).max(10),
@@ -33,21 +33,27 @@ export async function POST(req: NextRequest) {
       };
 
       try {
-        const geminiStream = await generateTemplate(body.messages as ChatMessage[]);
+        const qwenStream = await generateTemplate(body.messages as ChatMessage[]);
         let accumulated = '';
 
-        for await (const chunk of geminiStream) {
-          const text = chunk.text();
+        for await (const chunk of qwenStream) {
+          const text = chunk.choices[0]?.delta?.content || '';
           if (text) {
             accumulated += text;
             send({ chunk: text });
           }
         }
 
+        // Strip markdown fences if present (```json ... ```)
+        let jsonStr = accumulated.trim();
+        if (jsonStr.startsWith('```')) {
+          jsonStr = jsonStr.replace(/^```(?:json)?\s*/, '').replace(/\s*```$/, '');
+        }
+
         // Parse and validate the complete JSON
         let template: any;
         try {
-          template = JSON.parse(accumulated);
+          template = JSON.parse(jsonStr);
         } catch {
           send({ done: true, error: 'AI generated invalid JSON. Please try again with a clearer description.' });
           controller.close();
@@ -71,7 +77,7 @@ export async function POST(req: NextRequest) {
 
         send({ done: true, template: validation.data });
       } catch (err: any) {
-        console.error('[ai/generate] Error:', err?.message || err, 'Status:', err?.status, 'Details:', JSON.stringify(err?.errorDetails || err?.response?.data || ''));
+        console.error('[ai/generate] Error:', err?.message || err, 'Status:', err?.status);
         const message =
           err?.status === 429
             ? 'AI service rate limited. Please wait a moment and try again.'

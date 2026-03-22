@@ -1,12 +1,10 @@
 import OpenAI from 'openai';
 import { TODO_LIST_TEMPLATE } from '@orchestra/shared';
 
-// DashScope OpenAI-compatible API for Qwen3
-// Get your API key from: https://bailian.console.alibabacloud.com/?apiKey=1
-const apiKey = process.env.DASHSCOPE_API_KEY || '';
+// Qwen via Alibaba Cloud DashScope (OpenAI-compatible API)
 const client = new OpenAI({
-  apiKey,
-  baseURL: 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1',
+  apiKey: process.env.DASHSCOPE_API_KEY || '',
+  baseURL: process.env.DASHSCOPE_BASE_URL || 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1',
 });
 
 const SYSTEM_PROMPT = `You are an app generator for Orchestra, a Server-Driven UI platform. Given a user's app description, generate a complete ProjectTemplate JSON object.
@@ -155,7 +153,9 @@ ${JSON.stringify(TODO_LIST_TEMPLATE, null, 2)}
 10. Keep apps between 2-6 screens
 11. Every screen must have a heading text component and appropriate navigation buttons
 12. Use consistent padding: { top: 16, right: 16, bottom: 16, left: 16 } for screen-level components
-13. All IDs must be unique across the entire template`;
+13. All IDs must be unique across the entire template
+
+/no_think`;
 
 export interface ChatMessage {
   role: 'user' | 'assistant';
@@ -164,9 +164,8 @@ export interface ChatMessage {
 
 export async function generateTemplate(messages: ChatMessage[]) {
   const stream = await client.chat.completions.create({
-    model: 'qwen3-30b-a3b',
+    model: process.env.DASHSCOPE_MODEL || 'qwen3.5-plus',
     temperature: 0.7,
-    response_format: { type: 'json_object' },
     stream: true,
     messages: [
       { role: 'system', content: SYSTEM_PROMPT },

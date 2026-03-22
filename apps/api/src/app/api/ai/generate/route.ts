@@ -29,7 +29,11 @@ export async function POST(req: NextRequest) {
   const stream = new ReadableStream({
     async start(controller) {
       const send = (data: Record<string, any>) => {
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
+        try {
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
+        } catch {
+          // Controller already closed, ignore
+        }
       };
 
       try {
@@ -44,8 +48,14 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        // Strip markdown fences if present (```json ... ```)
+        // Strip <think>...</think> tags (Qwen3 thinking mode)
         let jsonStr = accumulated.trim();
+        const thinkEnd = jsonStr.indexOf('</think>');
+        if (thinkEnd !== -1) {
+          jsonStr = jsonStr.slice(thinkEnd + 8).trim();
+        }
+
+        // Strip markdown fences if present (```json ... ```)
         if (jsonStr.startsWith('```')) {
           jsonStr = jsonStr.replace(/^```(?:json)?\s*/, '').replace(/\s*```$/, '');
         }
@@ -55,8 +65,8 @@ export async function POST(req: NextRequest) {
         try {
           template = JSON.parse(jsonStr);
         } catch {
+          console.error('[ai/generate] JSON parse failed. Raw output:', accumulated.slice(0, 500));
           send({ done: true, error: 'AI generated invalid JSON. Please try again with a clearer description.' });
-          controller.close();
           return;
         }
 
@@ -71,7 +81,6 @@ export async function POST(req: NextRequest) {
             details: issues.slice(0, 10),
             rawTemplate: template,
           });
-          controller.close();
           return;
         }
 
@@ -83,9 +92,9 @@ export async function POST(req: NextRequest) {
             ? 'AI service rate limited. Please wait a moment and try again.'
             : `AI generation failed: ${err?.message || 'Unknown error'}`;
         send({ done: true, error: message });
+      } finally {
+        try { controller.close(); } catch { /* already closed */ }
       }
-
-      controller.close();
     },
   });
 

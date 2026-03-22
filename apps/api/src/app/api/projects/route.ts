@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@orchestra/database';
 import { requireAuth } from '@/lib/session';
-import { TEMPLATES, cloneTemplate } from '@orchestra/shared';
+import { TEMPLATES, cloneTemplate, ProjectTemplateSchema } from '@orchestra/shared';
+import type { ProjectTemplate } from '@orchestra/shared';
 import { z } from 'zod';
 
 const CreateProjectSchema = z.object({
   name: z.string().min(1).max(100),
   templateId: z.string().optional(),
+  template: ProjectTemplateSchema.optional(),
 });
 
 /** GET — list projects for the current user */
@@ -39,7 +41,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { name, templateId } = CreateProjectSchema.parse(body);
+    const { name, templateId, template: rawTemplate } = CreateProjectSchema.parse(body);
     const userId = (session!.user as any).id;
 
     const project = await prisma.project.create({
@@ -52,10 +54,15 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // If a template was requested, hydrate the project with template data
-    if (templateId) {
-      const template = TEMPLATES.find((t) => t.id === templateId);
-      if (template) {
+    // Resolve template: either from registry (templateId) or raw AI-generated template
+    const template = rawTemplate
+      ? (rawTemplate as ProjectTemplate)
+      : templateId
+        ? TEMPLATES.find((t) => t.id === templateId)
+        : undefined;
+
+    // If a template was provided, hydrate the project with template data
+    if (template) {
         const cloned = cloneTemplate(template);
 
         // Create datasources and sample entries
@@ -110,14 +117,15 @@ export async function POST(request: NextRequest) {
         }
 
         // Build the diagram JSON (compatible with XYFlow)
-        const diagramNodes = cloned.nodes.map((node) => ({
+        const diagramNodes = cloned.nodes.map((node: any) => ({
           id: node.newId,
-          type: 'orchestra',
+          type: node.type === 'decision' ? 'decision' : 'orchestra',
           position: node.position,
           data: {
             label: node.label,
             nodeType: node.type,
             props: {
+              ...(node.props || {}),
               screenDefinition: {
                 rootComponents: node.screen.rootComponents.map(fixDatasourceIds),
                 backgroundColor: node.screen.backgroundColor || '#0f172a',
@@ -128,14 +136,15 @@ export async function POST(request: NextRequest) {
           },
         }));
 
-        const diagramEdges = cloned.edges.map((edge) => ({
+        const diagramEdges = cloned.edges.map((edge: any) => ({
           id: edge.newId,
           source: edge.source,
           target: edge.target,
-          type: 'smoothstep',
-          animated: true,
+          type: 'labeled',
+          animated: false,
           ...(edge.sourceHandle ? { sourceHandle: edge.sourceHandle } : {}),
           ...(edge.targetHandle ? { targetHandle: edge.targetHandle } : {}),
+          ...(edge.data ? { data: edge.data } : {}),
         }));
 
         // Save diagram to project
@@ -145,7 +154,6 @@ export async function POST(request: NextRequest) {
             diagram: { nodes: diagramNodes, edges: diagramEdges, flowName: name } as any,
           },
         });
-      }
     }
 
     return NextResponse.json(project, { status: 201 });

@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, ClipboardList, Home, UtensilsCrossed, X } from 'lucide-react';
+import { Plus, ClipboardList, Home, UtensilsCrossed, MapPin, BrainCircuit, X, Sparkles, LayoutGrid } from 'lucide-react';
+import { AIEditorChat } from './AIEditorChat';
 
 interface TemplateSummary {
   id: string;
@@ -10,6 +11,8 @@ interface TemplateSummary {
   description: string;
   icon: string;
 }
+
+type FlyoutMode = 'templates' | 'ai';
 
 // SVG illustration for template cards
 function TemplateIllustration({ templateId }: { templateId: string }) {
@@ -34,6 +37,20 @@ function TemplateIllustration({ templateId }: { templateId: string }) {
       </div>
     );
   }
+  if (templateId === 'event-distance') {
+    return (
+      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500 to-cyan-600 flex items-center justify-center shadow-md shadow-sky-500/20">
+        <MapPin className="w-5 h-5 text-white" />
+      </div>
+    );
+  }
+  if (templateId === 'quiz') {
+    return (
+      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center shadow-md shadow-violet-500/20">
+        <BrainCircuit className="w-5 h-5 text-white" />
+      </div>
+    );
+  }
   return (
     <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center shadow-md">
       <Plus className="w-5 h-5 text-white" />
@@ -55,6 +72,7 @@ export function CreateProjectFlyout({
   const [name, setName] = useState('');
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  const [mode, setMode] = useState<FlyoutMode>('templates');
 
   // Reset state when flyout opens
   useEffect(() => {
@@ -62,6 +80,7 @@ export function CreateProjectFlyout({
       setName('');
       setSelectedTemplate(null);
       setCreating(false);
+      setMode('templates');
     }
   }, [open]);
 
@@ -107,84 +126,124 @@ export function CreateProjectFlyout({
           </button>
         </div>
 
-        {/* Body */}
-        <div className="flex-1 overflow-y-auto px-6 py-5">
-          {/* Project name */}
-          <div className="mb-6">
-            <label className="text-sm font-medium text-foreground mb-1.5 block">
-              Project name
-            </label>
-            <Input
-              placeholder="My awesome app..."
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
-              autoFocus
-              className="h-10"
-            />
+        {/* Mode toggle */}
+        <div className="px-6 pt-4 pb-2 shrink-0">
+          <div className="flex gap-1 p-1 rounded-lg bg-secondary/50">
+            <button
+              className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                mode === 'templates'
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+              onClick={() => setMode('templates')}
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              Templates
+            </button>
+            <button
+              className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                mode === 'ai'
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+              onClick={() => setMode('ai')}
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              AI Generate
+            </button>
           </div>
+        </div>
 
-          {/* Template selection */}
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-              Start from
-            </p>
-            <div className="space-y-2">
-              {/* Blank option */}
-              <button
-                className={`w-full flex items-center gap-3 p-3 rounded-lg border-2 text-left transition-all ${
-                  selectedTemplate === null
-                    ? 'border-primary bg-primary/5'
-                    : 'border-border hover:border-muted-foreground/30'
-                }`}
-                onClick={() => setSelectedTemplate(null)}
-              >
-                <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center shrink-0">
-                  <Plus className="w-5 h-5 text-muted-foreground" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-foreground">Blank</p>
-                  <p className="text-[11px] text-muted-foreground">Empty project</p>
-                </div>
-              </button>
+        {/* AI Mode */}
+        {mode === 'ai' && (
+          <div className="flex-1 overflow-hidden flex flex-col">
+            <AIEditorChat onCreated={onCreated} />
+          </div>
+        )}
 
-              {/* Templates */}
-              {templates.map((tpl) => (
-                <button
-                  key={tpl.id}
-                  className={`w-full flex items-center gap-3 p-3 rounded-lg border-2 text-left transition-all ${
-                    selectedTemplate === tpl.id
-                      ? 'border-primary bg-primary/5'
-                      : 'border-border hover:border-muted-foreground/30'
-                  }`}
-                  onClick={() => setSelectedTemplate(tpl.id)}
-                >
-                  <div className="shrink-0">
-                    <TemplateIllustration templateId={tpl.id} />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-foreground">{tpl.name}</p>
-                    <p className="text-[11px] text-muted-foreground line-clamp-1">{tpl.description}</p>
-                  </div>
-                </button>
-              ))}
+        {/* Templates Mode */}
+        {mode === 'templates' && (
+          <>
+            {/* Body */}
+            <div className="flex-1 overflow-y-auto px-6 py-4">
+              {/* Project name */}
+              <div className="mb-6">
+                <label className="text-sm font-medium text-foreground mb-1.5 block">
+                  Project name
+                </label>
+                <Input
+                  placeholder="My awesome app..."
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
+                  autoFocus
+                  className="h-10"
+                />
+              </div>
+
+              {/* Template selection */}
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+                  Start from
+                </p>
+                <div className="space-y-2">
+                  {/* Blank option */}
+                  <button
+                    className={`w-full flex items-center gap-3 p-3 rounded-lg border-2 text-left transition-all ${
+                      selectedTemplate === null
+                        ? 'border-primary bg-primary/5'
+                        : 'border-border hover:border-muted-foreground/30'
+                    }`}
+                    onClick={() => setSelectedTemplate(null)}
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center shrink-0">
+                      <Plus className="w-5 h-5 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Blank</p>
+                      <p className="text-[11px] text-muted-foreground">Empty project</p>
+                    </div>
+                  </button>
+
+                  {/* Templates */}
+                  {templates.map((tpl) => (
+                    <button
+                      key={tpl.id}
+                      className={`w-full flex items-center gap-3 p-3 rounded-lg border-2 text-left transition-all ${
+                        selectedTemplate === tpl.id
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border hover:border-muted-foreground/30'
+                      }`}
+                      onClick={() => setSelectedTemplate(tpl.id)}
+                    >
+                      <div className="shrink-0">
+                        <TemplateIllustration templateId={tpl.id} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-foreground">{tpl.name}</p>
+                        <p className="text-[11px] text-muted-foreground line-clamp-1">{tpl.description}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
 
-        {/* Footer */}
-        <div className="flex items-center gap-3 px-6 py-4 border-t border-border shrink-0">
-          <Button
-            className="flex-1"
-            disabled={!name.trim() || creating}
-            onClick={handleCreate}
-          >
-            {creating ? 'Creating...' : 'Create Project'}
-          </Button>
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-        </div>
+            {/* Footer */}
+            <div className="flex items-center gap-3 px-6 py-4 border-t border-border shrink-0">
+              <Button
+                className="flex-1"
+                disabled={!name.trim() || creating}
+                onClick={handleCreate}
+              >
+                {creating ? 'Creating...' : 'Create Project'}
+              </Button>
+              <Button variant="outline" onClick={onClose}>
+                Cancel
+              </Button>
+            </div>
+          </>
+        )}
       </div>
     </>
   );

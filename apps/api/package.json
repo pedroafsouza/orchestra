@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
+    "@google/generative-ai": "^0.24.1",
     "@orchestra/database": "workspace:*",
     "@orchestra/shared": "workspace:*",
     "bcryptjs": "^3.0.3",

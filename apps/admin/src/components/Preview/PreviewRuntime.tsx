@@ -78,7 +78,7 @@ function RuntimeComponent({
       for (const action of component.actions) {
         onAction({
           type: action.type,
-          payload: action,
+          payload: action.payload,
           formValues,
         });
       }

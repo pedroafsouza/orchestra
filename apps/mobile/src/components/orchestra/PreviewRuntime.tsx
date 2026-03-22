@@ -79,7 +79,7 @@ function RuntimeComponent({
   const executeActions = () => {
     if (component.actions) {
       for (const action of component.actions) {
-        onAction({ type: action.type, payload: action, formValues });
+        onAction({ type: action.type, payload: action.payload, formValues });
       }
     }
   };

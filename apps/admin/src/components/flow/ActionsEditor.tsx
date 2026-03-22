@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 const TRIGGERS: ActionTrigger[] = ['onLoad', 'onPress', 'onValueChange'];
-const ACTION_TYPES: ActionType[] = ['NAVIGATE', 'SET_CONTEXT', 'GET_GEO', 'API_CALL'];
+const ACTION_TYPES: ActionType[] = ['NAVIGATE', 'SET_CONTEXT', 'DATASOURCE_ADD', 'DATASOURCE_UPDATE', 'GET_GEO', 'API_CALL'];
 
 export function ActionsEditor({
   nodeId,

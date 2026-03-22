@@ -12,6 +12,8 @@ import { useFlowStore } from '@/store/flowStore';
 import { useThemeStore } from '@/store/themeStore';
 import { useProjectStore } from '@/store/projectStore';
 import { OrchestraNode, getNodeColor } from '@/components/OrchestraNode';
+import { DecisionNode } from '@/components/DecisionNode';
+import { LabeledEdge } from '@/components/LabeledEdge';
 import { Sidebar } from '@/components/Sidebar';
 import { Toolbar } from '@/components/Toolbar';
 import { ScreenBuilderModal } from '@/components/ScreenBuilder/ScreenBuilderModal';
@@ -19,6 +21,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 
 const nodeTypes = {
   orchestra: OrchestraNode,
+  decision: DecisionNode,
+};
+
+const edgeTypes = {
+  labeled: LabeledEdge,
 };
 
 export function FlowEditorPage() {
@@ -69,7 +76,7 @@ export function FlowEditorPage() {
   const edgeColor = isDark ? 'hsl(215 20% 45%)' : 'hsl(215 16% 70%)';
 
   const defaultEdgeOptions = useMemo(() => ({
-    type: 'smoothstep',
+    type: 'labeled',
     animated: false,
     style: {
       stroke: edgeColor,
@@ -84,33 +91,77 @@ export function FlowEditorPage() {
     },
   }), [edgeColor]);
 
-  // Ensure existing edges have markers (for edges loaded from DB)
-  const styledEdges = useMemo(() =>
-    edges.map((e) => ({
-      ...e,
-      type: e.type || 'smoothstep',
-      animated: false,
-      style: {
-        stroke: edgeColor,
-        strokeWidth: 1.5,
-        strokeDasharray: '6 4',
-        ...((e as any).style || {}),
-      },
-      markerEnd: (e as any).markerEnd || {
-        type: MarkerType.ArrowClosed,
-        color: edgeColor,
-        width: 16,
-        height: 16,
-      },
-    })),
-    [edges, edgeColor]
-  );
+  // Derive implicit edges from navigateTo props inside screen definitions
+  const implicitEdges = useMemo(() => {
+    const result: typeof edges = [];
+    const existingPairs = new Set(edges.map((e) => `${e.source}->${e.target}`));
+
+    for (const node of nodes) {
+      const rootComponents =
+        (node.data as any).props?.screenDefinition?.rootComponents;
+      if (!rootComponents) continue;
+
+      // Recursively find all navigateTo references
+      const stack = [...rootComponents];
+      while (stack.length > 0) {
+        const comp = stack.pop();
+        if (!comp) continue;
+        const target = comp.props?.navigateTo;
+        if (target && typeof target === 'string' && target !== node.id) {
+          const pairKey = `${node.id}->${target}`;
+          if (!existingPairs.has(pairKey)) {
+            existingPairs.add(pairKey);
+            const label = comp.props?.label || comp.type || '';
+            result.push({
+              id: `implicit_${node.id}_${comp.id}_${target}`,
+              source: node.id,
+              target,
+              type: 'labeled',
+              animated: false,
+              data: { label, implicit: true },
+            } as any);
+          }
+        }
+        if (comp.children) stack.push(...comp.children);
+      }
+    }
+    return result;
+  }, [nodes, edges]);
+
+  // Ensure existing edges have markers and labels (for edges loaded from DB)
+  const styledEdges = useMemo(() => {
+    const allEdges = [...edges, ...implicitEdges];
+    return allEdges.map((e) => {
+      const isImplicit = (e as any).data?.implicit;
+      return {
+        ...e,
+        type: 'labeled',
+        animated: false,
+        selectable: !isImplicit,
+        deletable: !isImplicit,
+        style: {
+          stroke: edgeColor,
+          strokeWidth: 1.5,
+          strokeDasharray: '6 4',
+          ...((e as any).style || {}),
+        },
+        markerEnd: (e as any).markerEnd || {
+          type: MarkerType.ArrowClosed,
+          color: edgeColor,
+          width: 16,
+          height: 16,
+        },
+        data: {
+          ...((e as any).data || {}),
+        },
+      };
+    });
+  }, [edges, implicitEdges, edgeColor]);
 
   return (
     <div className="h-screen flex flex-col bg-secondary">
       <Toolbar
         projectId={projectId!}
-        projectGuid={currentProject?.guid ?? ''}
         onBack={() => navigate(`/project/${projectId}`)}
       />
       <div className="flex flex-1 overflow-hidden">
@@ -122,6 +173,7 @@ export function FlowEditorPage() {
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
             nodeTypes={nodeTypes}
+            edgeTypes={edgeTypes}
             defaultEdgeOptions={defaultEdgeOptions}
             onPaneClick={() => setSelectedNode(null)}
             onNodeDoubleClick={handleNodeDoubleClick}

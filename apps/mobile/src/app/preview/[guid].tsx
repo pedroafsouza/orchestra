@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import type { ScreenComponent, Breakpoint } from '@orchestra/shared';
+import { evaluateCondition } from '@orchestra/shared';
 import { PreviewRuntime } from '@/components/orchestra/PreviewRuntime';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -27,10 +28,20 @@ interface DiagramNode {
         backgroundColor?: string;
         scrollable?: boolean;
       };
+      conditions?: { label: string; expression: string }[];
       [key: string]: any;
     };
+    actions?: { trigger: string; type: string; payload: any }[];
     [key: string]: any;
   };
+}
+
+interface DiagramEdge {
+  id: string;
+  source: string;
+  target: string;
+  sourceHandle?: string;
+  label?: string;
 }
 
 interface DatasourceResponse {
@@ -41,8 +52,9 @@ interface DatasourceResponse {
 }
 
 interface PreviewData {
+  projectId: string;
   projectName: string;
-  diagram: { nodes: DiagramNode[]; edges: any[] };
+  diagram: { nodes: DiagramNode[]; edges: DiagramEdge[] };
   datasources: DatasourceResponse[];
 }
 
@@ -73,6 +85,14 @@ export default function PreviewScreen() {
     { nodeId: string; entry?: Record<string, any> }[]
   >([]);
 
+  // Local datasource state (for DATASOURCE_ADD/UPDATE in preview)
+  const [localDatasources, setLocalDatasources] = useState<
+    Map<string, Record<string, any>[]>
+  >(new Map());
+
+  // Context for decision nodes (SET_CONTEXT values accumulate here)
+  const contextRef = useRef<Record<string, any>>({});
+
   // Fetch preview data
   useEffect(() => {
     if (!guid) return;
@@ -90,6 +110,13 @@ export default function PreviewScreen() {
         const json: PreviewData = await res.json();
         setData(json);
 
+        // Initialize local datasource state
+        const dsMap = new Map<string, Record<string, any>[]>();
+        for (const ds of json.datasources) {
+          dsMap.set(ds.id, ds.entries || []);
+        }
+        setLocalDatasources(dsMap);
+
         // Set initial screen to first node
         if (json.diagram.nodes?.length > 0) {
           setCurrentNodeId(json.diagram.nodes[0].id);
@@ -104,23 +131,82 @@ export default function PreviewScreen() {
     fetchPreview();
   }, [guid]);
 
-  // Build datasource map
+  // Build datasource map from local state
   const datasourceData = useCallback((): Map<
     string,
     Record<string, any>[]
   > => {
-    const map = new Map<string, Record<string, any>[]>();
-    if (data?.datasources) {
-      for (const ds of data.datasources) {
-        map.set(ds.id, ds.entries || []);
-      }
-    }
-    return map;
-  }, [data]);
+    return new Map(localDatasources);
+  }, [localDatasources]);
 
-  // Navigation handler
+  // Resolve decision node — evaluate conditions and follow output edge
+  const resolveDecisionNode = useCallback(
+    (nodeId: string): string | null => {
+      if (!data) return null;
+      const node = data.diagram.nodes.find((n) => n.id === nodeId);
+      if (!node || node.data.nodeType !== 'decision') return null;
+
+      const conditions = node.data.props?.conditions || [];
+      const edges = data.diagram.edges.filter((e) => e.source === nodeId);
+
+      // Evaluate each condition in order, find the first match
+      for (let i = 0; i < conditions.length; i++) {
+        const cond = conditions[i];
+        try {
+          if (evaluateCondition(cond.expression, contextRef.current)) {
+            // Find the edge for this condition (by sourceHandle or index)
+            const edge = edges.find(
+              (e) => e.sourceHandle === `condition-${i}`,
+            ) || edges[i];
+            if (edge) return edge.target;
+          }
+        } catch {
+          // Skip malformed conditions
+        }
+      }
+
+      // Fallback: use the default/last edge if no condition matched
+      const defaultEdge = edges.find(
+        (e) => e.sourceHandle === 'default',
+      ) || edges[edges.length - 1];
+      return defaultEdge?.target || null;
+    },
+    [data],
+  );
+
+  // Navigation handler — resolves decision nodes automatically
   const handleNavigate = useCallback(
     (nodeId: string, entry?: Record<string, any>) => {
+      if (!data) return;
+      const targetNode = data.diagram.nodes.find((n) => n.id === nodeId);
+
+      // If navigating to a decision node, resolve it to the next screen
+      if (targetNode?.data.nodeType === 'decision') {
+        const resolvedId = resolveDecisionNode(nodeId);
+        if (resolvedId) {
+          // Push current screen to stack, then navigate to resolved target
+          if (currentNodeId) {
+            setNavStack((prev) => [
+              ...prev,
+              { nodeId: currentNodeId, entry: navigationContext },
+            ]);
+          }
+          setCurrentNodeId(resolvedId);
+          setNavigationContext(entry);
+          return;
+        }
+        // Decision node couldn't resolve (no edges/conditions) — go back
+        if (navStack.length > 0) {
+          const prev = navStack[navStack.length - 1];
+          setNavStack((s) => s.slice(0, -1));
+          setCurrentNodeId(prev.nodeId);
+          setNavigationContext(prev.entry);
+          return;
+        }
+        // No nav stack either — stay on current screen
+        return;
+      }
+
       if (currentNodeId) {
         setNavStack((prev) => [
           ...prev,
@@ -130,7 +216,7 @@ export default function PreviewScreen() {
       setCurrentNodeId(nodeId);
       setNavigationContext(entry);
     },
-    [currentNodeId, navigationContext],
+    [currentNodeId, navigationContext, data, resolveDecisionNode],
   );
 
   // Back navigation
@@ -142,13 +228,65 @@ export default function PreviewScreen() {
     setNavigationContext(prev.entry);
   }, [navStack]);
 
-  // Action handler
+  // Action handler — supports all action types
   const handleAction = useCallback(
     (action: { type: string; payload: any; formValues: Record<string, string> }) => {
-      const { type, payload } = action;
+      const { type, payload, formValues } = action;
 
-      if (type === 'NAVIGATE' && payload.targetNodeId) {
-        handleNavigate(payload.targetNodeId);
+      switch (type) {
+        case 'NAVIGATE': {
+          if (payload?.targetNodeId) {
+            handleNavigate(payload.targetNodeId);
+          }
+          break;
+        }
+
+        case 'SET_CONTEXT': {
+          if (payload?.key != null) {
+            contextRef.current = {
+              ...contextRef.current,
+              [payload.key]: payload.value,
+            };
+          }
+          break;
+        }
+
+        case 'DATASOURCE_ADD': {
+          if (!payload?.datasourceId) break;
+          const dsId = payload.datasourceId;
+          const fieldMap: Record<string, string> = payload.fieldMap || {};
+
+          // Build entry data from field map + form values
+          const entryData: Record<string, any> = {};
+          for (const [dsField, componentId] of Object.entries(fieldMap)) {
+            entryData[dsField] = formValues[componentId] ?? '';
+          }
+
+          // Add to local datasource state
+          setLocalDatasources((prev) => {
+            const next = new Map(prev);
+            const existing = next.get(dsId) || [];
+            next.set(dsId, [...existing, entryData]);
+            return next;
+          });
+          break;
+        }
+
+        case 'DATASOURCE_UPDATE': {
+          if (!payload?.datasourceId || !payload?.field) break;
+          // Update is handled via navigation context entry
+          break;
+        }
+
+        case 'API_CALL': {
+          // Future: make HTTP calls
+          break;
+        }
+
+        case 'GET_GEO': {
+          // Future: get geolocation
+          break;
+        }
       }
     },
     [handleNavigate],

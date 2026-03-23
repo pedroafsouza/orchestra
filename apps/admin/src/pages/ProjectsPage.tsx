@@ -85,10 +85,10 @@ export function ProjectsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="h-14 border-b flex items-center justify-between px-6 bg-card/80 backdrop-blur-md sticky top-0 z-50">
+    <div className="min-h-screen text-foreground bg-[radial-gradient(ellipse_at_top,hsl(var(--background-gradient-from)),hsl(var(--background-gradient-via))_50%,hsl(var(--background-gradient-to)))]">
+      <header className="h-14 border-b border-border/50 flex items-center justify-between px-6 bg-card/60 backdrop-blur-xl sticky top-0 z-50">
         <div className="flex items-center gap-4">
-          <span className="text-lg font-bold text-primary tracking-tight">Orchestra</span>
+          <span className="text-lg font-bold bg-gradient-to-r from-primary to-violet-500 bg-clip-text text-transparent tracking-tight">Orchestra</span>
           <Link
             to="/ai"
             className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"

@@ -5,9 +5,9 @@
 @layer base {
   :root {
     --background: 225 25% 95%;
-    --background-gradient-from: 220 30% 97%;
-    --background-gradient-via: 235 25% 94%;
-    --background-gradient-to: 225 20% 92%;
+    --background-gradient-from: 240 40% 98%;
+    --background-gradient-via: 225 25% 95%;
+    --background-gradient-to: 215 20% 92%;
     --foreground: 222 40% 16%;
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
@@ -31,9 +31,9 @@
 
   .dark {
     --background: 225 35% 7%;
-    --background-gradient-from: 230 40% 10%;
+    --background-gradient-from: 245 45% 12%;
     --background-gradient-via: 225 35% 7%;
-    --background-gradient-to: 220 30% 5%;
+    --background-gradient-to: 215 30% 5%;
     --foreground: 215 30% 90%;
     --card: 225 30% 11%;
     --card-foreground: 215 30% 90%;

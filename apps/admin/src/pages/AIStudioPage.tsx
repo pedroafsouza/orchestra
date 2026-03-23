@@ -111,7 +111,7 @@ export function AIStudioPage() {
   const hasMessages = messages.length > 0 || isGenerating;
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col">
+    <div className="min-h-screen text-foreground flex flex-col bg-[radial-gradient(ellipse_at_top_left,hsl(var(--background-gradient-from)),hsl(var(--background-gradient-via))_50%,hsl(var(--background-gradient-to)))]">
       <AIStudioHeader />
 
       {!hasMessages ? (
@@ -147,14 +147,14 @@ export function AIStudioPage() {
 
 function AIStudioHeader() {
   return (
-    <header className="h-14 border-b flex items-center justify-between px-6 bg-card/80 backdrop-blur-md sticky top-0 z-50 shrink-0">
+    <header className="h-14 border-b border-border/50 flex items-center justify-between px-6 bg-card/60 backdrop-blur-xl sticky top-0 z-50 shrink-0">
       <div className="flex items-center gap-4">
         <Link
           to="/"
           className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span className="text-lg font-bold text-primary tracking-tight">Orchestra</span>
+          <span className="text-lg font-bold bg-gradient-to-r from-primary to-violet-500 bg-clip-text text-transparent tracking-tight">Orchestra</span>
         </Link>
         <span className="text-muted-foreground/40">/</span>
         <div className="flex items-center gap-1.5 text-sm font-medium text-foreground">
@@ -375,7 +375,7 @@ function ChatLayout({
       </div>
 
       {/* Side panel */}
-      <aside className="hidden lg:flex w-[420px] shrink-0 border-l border-border bg-card/50 flex-col">
+      <aside className="hidden lg:flex w-[420px] shrink-0 border-l border-border/50 bg-card/30 backdrop-blur-sm flex-col">
         <div className="sticky top-14 h-[calc(100vh-3.5rem)] overflow-y-auto p-6">
           {generatedTemplate ? (
             <TemplatePreview

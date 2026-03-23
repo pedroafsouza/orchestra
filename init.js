@@ -22,13 +22,15 @@ function banner() {
   console.log(`  ${GREEN}1)${NC} Host mode ${DIM}— API + Admin on host, MongoDB in Docker${NC}`);
   console.log(`  ${GREEN}2)${NC} Docker mode ${DIM}— API + Admin + MongoDB all in Docker${NC}`);
   console.log(`  ${GREEN}3)${NC} Install deps ${DIM}— pnpm install across all workspace apps${NC}`);
+  console.log(`  ${GREEN}4)${NC} Kill services ${DIM}— stop API, Admin, and Expo${NC}`);
+  console.log(`  ${GREEN}5)${NC} Destroy database ${DIM}— remove MongoDB container and wipe data${NC}`);
   console.log();
 }
 
 function prompt() {
   const rl = createInterface({ input: process.stdin, output: process.stdout });
   return new Promise((res) => {
-    rl.question(`${YELLOW}  Choose [1/2/3]:${NC}`, (answer) => {
+    rl.question(`${YELLOW}  Choose [1-5]:${NC}`, (answer) => {
       rl.close();
       res(answer.trim());
     });
@@ -49,13 +51,27 @@ async function main() {
     return;
   }
 
+  if (choice === "4") {
+    console.log();
+    const child = spawn("node", [resolve(ROOT, "scripts/dev-start.mjs"), "--kill"], { cwd: ROOT, stdio: "inherit" });
+    child.on("close", (code) => process.exit(code ?? 0));
+    return;
+  }
+
+  if (choice === "5") {
+    console.log();
+    const child = spawn("node", [resolve(ROOT, "scripts/dev-start.mjs"), "--destroy-db"], { cwd: ROOT, stdio: "inherit" });
+    child.on("close", (code) => process.exit(code ?? 0));
+    return;
+  }
+
   let script;
   if (choice === "1") {
     script = resolve(ROOT, "scripts/dev-start.mjs");
   } else if (choice === "2") {
     script = resolve(ROOT, "scripts/docker-deploy.mjs");
   } else {
-    console.log(`\n  Invalid choice. Use 1, 2, or 3.\n`);
+    console.log(`\n  Invalid choice. Use 1-5.\n`);
     process.exit(1);
   }
 

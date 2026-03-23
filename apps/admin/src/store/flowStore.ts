@@ -11,6 +11,12 @@ import {
 } from '@xyflow/react';
 import type { NodeType, OrchestraAction } from '@orchestra/shared';
 import { api } from '@/lib/api';
+import Dagre from '@dagrejs/dagre';
+
+export type LayoutDirection = 'TB' | 'LR' | 'BT' | 'RL';
+
+const NODE_WIDTH = 180;
+const NODE_HEIGHT = 100;
 
 export interface OrchestraNodeData {
   label: string;
@@ -44,6 +50,7 @@ interface FlowState {
   getExportJSON: () => any;
   loadDiagram: (projectId: string) => Promise<void>;
   saveDiagram: () => void;
+  autoLayout: (direction: LayoutDirection) => void;
   undo: () => void;
   redo: () => void;
   canUndo: () => boolean;
@@ -136,7 +143,27 @@ export const useFlowStore = create<FlowState>((set, get) => ({
 
   onConnect: (connection) => {
     pushHistory(get());
-    set({ edges: addEdge(connection, get().edges) });
+    // Auto-label edges from decision condition handles
+    const sourceNode = get().nodes.find((n) => n.id === connection.source);
+    let edgeData: Record<string, any> | undefined;
+    if (
+      sourceNode?.data.nodeType === 'decision' &&
+      connection.sourceHandle?.startsWith('condition-')
+    ) {
+      const idx = parseInt(connection.sourceHandle.split('-')[1]);
+      const conditions: { label: string }[] = sourceNode.data.props?.conditions || [];
+      const label = conditions[idx]?.label || `Option ${idx + 1}`;
+      edgeData = { label, conditionIndex: idx };
+    }
+    const edge: Edge = {
+      ...connection,
+      id: `edge_${connection.source}_${connection.sourceHandle || 'bottom'}_${connection.target}_${Date.now()}`,
+      source: connection.source,
+      target: connection.target,
+      type: 'labeled',
+      data: edgeData,
+    };
+    set({ edges: addEdge(edge, get().edges) });
     scheduleSave(get());
   },
 
@@ -180,12 +207,12 @@ export const useFlowStore = create<FlowState>((set, get) => ({
 
     const newNode: Node<OrchestraNodeData> = {
       id,
-      type: 'orchestra',
+      type: type === 'decision' ? 'decision' : 'orchestra',
       position: { x, y },
       data: {
-        label: `${type} node`,
+        label: type === 'decision' ? 'Decision' : `${type} node`,
         nodeType: type,
-        props: {},
+        props: type === 'decision' ? { conditions: [] } : {},
         actions: [],
       },
     };
@@ -228,8 +255,41 @@ export const useFlowStore = create<FlowState>((set, get) => ({
         id: e.id,
         source: e.source,
         target: e.target,
+        condition: (e as any).data?.label || undefined,
       })),
     };
+  },
+
+  autoLayout: (direction: LayoutDirection) => {
+    pushHistory(get());
+    const { nodes, edges } = get();
+    const g = new Dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({}));
+    g.setGraph({
+      rankdir: direction,
+      nodesep: 60,
+      ranksep: 100,
+      marginx: 40,
+      marginy: 40,
+    });
+    nodes.forEach((node) => {
+      g.setNode(node.id, { width: NODE_WIDTH, height: NODE_HEIGHT });
+    });
+    edges.forEach((edge) => {
+      g.setEdge(edge.source, edge.target);
+    });
+    Dagre.layout(g);
+    const laid = nodes.map((node) => {
+      const pos = g.node(node.id);
+      return {
+        ...node,
+        position: {
+          x: pos.x - NODE_WIDTH / 2,
+          y: pos.y - NODE_HEIGHT / 2,
+        },
+      };
+    });
+    set({ nodes: laid as Node<OrchestraNodeData>[] });
+    scheduleSave(get());
   },
 
   undo: () => {

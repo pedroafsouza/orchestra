@@ -8,15 +8,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 
-const EXPO_DEV_URL = import.meta.env.VITE_EXPO_DEV_URL || 'http://localhost:8081';
 
 interface ToolbarProps {
   projectId: string;
-  projectGuid: string;
   onBack: () => void;
 }
 
-export function Toolbar({ projectId, projectGuid, onBack }: ToolbarProps) {
+export function Toolbar({ projectId, onBack }: ToolbarProps) {
   const flowName = useFlowStore((s) => s.flowName);
   const setFlowName = useFlowStore((s) => s.setFlowName);
   const getExportJSON = useFlowStore((s) => s.getExportJSON);
@@ -119,31 +117,15 @@ export function Toolbar({ projectId, projectGuid, onBack }: ToolbarProps) {
         return;
       }
 
-      // Pre-flight check 5: Expo dev server is reachable
-      try {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 3000);
-        await fetch(EXPO_DEV_URL, { mode: 'no-cors', signal: controller.signal });
-        clearTimeout(timeout);
-      } catch {
-        toast({
-          title: 'Expo dev server not reachable',
-          description: `Start it with: cd apps/mobile && npm start -- --web`,
-          variant: 'destructive',
-          duration: 6000,
-        });
-        return;
-      }
-
-      // All checks passed — open preview
-      window.open(`${EXPO_DEV_URL}/preview/${projectGuid}`, '_blank');
+      // All checks passed — open preview in admin
+      window.open(`/project/${projectId}/preview`, '_blank');
     } finally {
       setPreviewLoading(false);
     }
   };
 
   return (
-    <header className="h-14 flex items-center justify-between px-4 border-b bg-card border-border">
+    <header className="h-14 flex items-center justify-between px-4 border-b bg-card/80 backdrop-blur-md border-border">
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="sm" onClick={onBack} className="gap-1.5 text-muted-foreground hover:text-foreground">
           <ArrowLeft className="w-3.5 h-3.5" />

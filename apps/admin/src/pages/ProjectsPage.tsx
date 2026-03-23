@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useProjectStore } from '@/store/projectStore';
 import { api } from '@/lib/api';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -15,7 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Plus, Search, ArrowUpDown } from 'lucide-react';
+import { Plus, Search, ArrowUpDown, Sparkles } from 'lucide-react';
 import { CreateProjectFlyout } from '@/components/projects/CreateProjectFlyout';
 import { ProjectCard } from '@/components/projects/ProjectCard';
 
@@ -86,8 +86,17 @@ export function ProjectsPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <header className="h-14 border-b flex items-center justify-between px-6 bg-card">
-        <span className="text-lg font-bold text-primary">Orchestra</span>
+      <header className="h-14 border-b flex items-center justify-between px-6 bg-card/80 backdrop-blur-md sticky top-0 z-50">
+        <div className="flex items-center gap-4">
+          <span className="text-lg font-bold text-primary tracking-tight">Orchestra</span>
+          <Link
+            to="/ai"
+            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            AI Studio
+          </Link>
+        </div>
         <ThemeToggle />
       </header>
 

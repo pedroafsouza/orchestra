@@ -13,7 +13,7 @@ interface DatasourceListProps {
 
 export function DatasourceList({ datasources, selectedDsId, onSelect, onShowCreate }: DatasourceListProps) {
   return (
-    <div className="w-64 border-r bg-card">
+    <div className="w-64 border-r bg-card/60 backdrop-blur-sm">
       <ScrollArea className="h-full">
         <div className="p-4">
           <div className="flex items-center justify-between mb-3">

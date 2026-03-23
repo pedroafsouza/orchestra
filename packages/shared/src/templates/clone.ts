@@ -55,6 +55,7 @@ export function cloneTemplate(template: ProjectTemplate) {
     return {
       ...node,
       newId,
+      props: node.props ? JSON.parse(JSON.stringify(node.props)) : undefined,
       screen: {
         ...node.screen,
         rootComponents: node.screen.rootComponents.map(remapComponent),
@@ -88,6 +89,7 @@ export function cloneTemplate(template: ProjectTemplate) {
     newId: mapId(edge.id, 'edge'),
     source: idMap.get(edge.source) || edge.source,
     target: idMap.get(edge.target) || edge.target,
+    data: edge.data ? JSON.parse(JSON.stringify(edge.data)) : undefined,
   }));
 
   return { datasources, nodes: fixedNodes, edges, idMap };

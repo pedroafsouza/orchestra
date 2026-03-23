@@ -22,7 +22,7 @@ export function ProjectCard({ project, onDelete }: ProjectCardProps) {
 
   return (
     <Card
-      className="cursor-pointer shadow-sm hover:shadow-xl hover:-translate-y-1 hover:border-primary/30 transition-all duration-200 group overflow-hidden"
+      className="cursor-pointer shadow-md dark:shadow-black/30 hover:shadow-xl hover:-translate-y-1.5 hover:border-primary/40 transition-all duration-200 group overflow-hidden"
       onClick={() => navigate(`/project/${project.id}`)}
     >
       {/* Decorative banner */}
@@ -53,8 +53,8 @@ export function ProjectCard({ project, onDelete }: ProjectCardProps) {
         <h3 className="font-semibold group-hover:text-primary transition-colors mb-0.5">
           {project.name}
         </h3>
-        <p className="text-[11px] text-muted-foreground font-mono mb-3">
-          {project.guid}
+        <p className="text-[11px] text-muted-foreground mb-3">
+          {timeAgo(project.updatedAt) === 'just now' ? 'Created just now' : `Updated ${timeAgo(project.updatedAt)}`}
         </p>
         <div className="flex items-center gap-4 text-xs text-muted-foreground">
           <span className="flex items-center gap-1">

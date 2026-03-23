@@ -1,4 +1,4 @@
-import { Handle, Position, type NodeProps } from '@xyflow/react';
+import { Handle, Position, NodeResizer, type NodeProps } from '@xyflow/react';
 import {
   Home,
   List,
@@ -102,14 +102,23 @@ export function OrchestraNode({ id, data }: NodeProps) {
   return (
     <div
       className={`
-        relative rounded-xl min-w-[180px] max-w-[220px] overflow-hidden cursor-pointer
+        relative rounded-xl min-w-[160px] overflow-hidden cursor-pointer
         border bg-card
         shadow-sm hover:shadow-lg
-        transition-all duration-200
-        ${isSelected ? 'ring-2 ring-accent-500 shadow-lg scale-[1.02]' : ''}
+        transition-shadow duration-200
+        ${isSelected ? 'ring-2 ring-primary/50 shadow-lg' : ''}
       `}
+      style={{ width: '100%', height: '100%' }}
       onClick={() => setSelectedNode(id)}
     >
+      <NodeResizer
+        isVisible={isSelected}
+        minWidth={160}
+        minHeight={60}
+        lineClassName="!border-primary/40"
+        handleClassName="!w-2 !h-2 !bg-primary !border-2 !border-white dark:!border-slate-800 !rounded-sm"
+      />
+
       {/* Top accent bar */}
       <div className={`h-1 ${style.accent}`} />
 

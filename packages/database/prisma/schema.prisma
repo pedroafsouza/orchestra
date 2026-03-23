@@ -153,3 +153,21 @@ model DatasourceEntry {
 
   @@map("datasource_entries")
 }
+
+// ─── Analytics ──────────────────────────────────────────────────────────────
+
+model AnalyticsEvent {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  projectId   String   @db.ObjectId
+  sessionId   String
+  eventType   String   // page_view, button_click, form_submit, navigation, datasource_action, checkbox_toggle, switch_toggle
+  nodeId      String?
+  componentId String?
+  metadata    Json?
+  deviceInfo  Json?
+  timestamp   DateTime @default(now())
+
+  @@index([projectId, timestamp])
+  @@index([projectId, eventType])
+  @@map("analytics_events")
+}

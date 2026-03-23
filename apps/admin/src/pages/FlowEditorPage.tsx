@@ -1,14 +1,14 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   ReactFlow,
-  Background,
+  ReactFlowProvider,
   Controls,
   MiniMap,
-  BackgroundVariant,
   MarkerType,
+  useReactFlow,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { useFlowStore } from '@/store/flowStore';
+import { useFlowStore, type LayoutDirection } from '@/store/flowStore';
 import { useThemeStore } from '@/store/themeStore';
 import { useProjectStore } from '@/store/projectStore';
 import { OrchestraNode, getNodeColor } from '@/components/OrchestraNode';
@@ -16,6 +16,7 @@ import { DecisionNode } from '@/components/DecisionNode';
 import { LabeledEdge } from '@/components/LabeledEdge';
 import { Sidebar } from '@/components/Sidebar';
 import { Toolbar } from '@/components/Toolbar';
+import { LayoutToolbar } from '@/components/flow/LayoutToolbar';
 import { ScreenBuilderModal } from '@/components/ScreenBuilder/ScreenBuilderModal';
 import { useParams, useNavigate } from 'react-router-dom';
 
@@ -29,29 +30,44 @@ const edgeTypes = {
 };
 
 export function FlowEditorPage() {
+  return (
+    <ReactFlowProvider>
+      <FlowEditorInner />
+    </ReactFlowProvider>
+  );
+}
+
+function FlowEditorInner() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const theme = useThemeStore((s) => s.theme);
-  const currentProject = useProjectStore((s) => s.currentProject);
   const loadDiagram = useFlowStore((s) => s.loadDiagram);
-  const loaded = useFlowStore((s) => s.loaded);
   const nodes = useFlowStore((s) => s.nodes);
   const edges = useFlowStore((s) => s.edges);
   const onNodesChange = useFlowStore((s) => s.onNodesChange);
   const onEdgesChange = useFlowStore((s) => s.onEdgesChange);
   const onConnect = useFlowStore((s) => s.onConnect);
   const setSelectedNode = useFlowStore((s) => s.setSelectedNode);
-
   const undo = useFlowStore((s) => s.undo);
   const redo = useFlowStore((s) => s.redo);
+  const autoLayout = useFlowStore((s) => s.autoLayout);
 
   const [screenBuilderNodeId, setScreenBuilderNodeId] = useState<string | null>(null);
+  const [snapToGrid, setSnapToGrid] = useState(true);
+  const { fitView } = useReactFlow();
+
+  const handleAutoLayout = useCallback(
+    (direction: LayoutDirection) => {
+      autoLayout(direction);
+      requestAnimationFrame(() => fitView({ padding: 0.2, duration: 300 }));
+    },
+    [autoLayout, fitView],
+  );
 
   useEffect(() => {
     if (projectId) loadDiagram(projectId);
   }, [projectId]);
 
-  // Keyboard shortcuts for undo/redo
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
@@ -72,7 +88,6 @@ export function FlowEditorPage() {
   };
 
   const isDark = theme === 'dark';
-
   const edgeColor = isDark ? 'hsl(215 20% 45%)' : 'hsl(215 16% 70%)';
 
   const defaultEdgeOptions = useMemo(() => ({
@@ -91,44 +106,8 @@ export function FlowEditorPage() {
     },
   }), [edgeColor]);
 
-  // Derive implicit edges from navigateTo props inside screen definitions
-  const implicitEdges = useMemo(() => {
-    const result: typeof edges = [];
-    const existingPairs = new Set(edges.map((e) => `${e.source}->${e.target}`));
+  const implicitEdges = useImplicitEdges(nodes, edges);
 
-    for (const node of nodes) {
-      const rootComponents =
-        (node.data as any).props?.screenDefinition?.rootComponents;
-      if (!rootComponents) continue;
-
-      // Recursively find all navigateTo references
-      const stack = [...rootComponents];
-      while (stack.length > 0) {
-        const comp = stack.pop();
-        if (!comp) continue;
-        const target = comp.props?.navigateTo;
-        if (target && typeof target === 'string' && target !== node.id) {
-          const pairKey = `${node.id}->${target}`;
-          if (!existingPairs.has(pairKey)) {
-            existingPairs.add(pairKey);
-            const label = comp.props?.label || comp.type || '';
-            result.push({
-              id: `implicit_${node.id}_${comp.id}_${target}`,
-              source: node.id,
-              target,
-              type: 'labeled',
-              animated: false,
-              data: { label, implicit: true },
-            } as any);
-          }
-        }
-        if (comp.children) stack.push(...comp.children);
-      }
-    }
-    return result;
-  }, [nodes, edges]);
-
-  // Ensure existing edges have markers and labels (for edges loaded from DB)
   const styledEdges = useMemo(() => {
     const allEdges = [...edges, ...implicitEdges];
     return allEdges.map((e) => {
@@ -177,15 +156,19 @@ export function FlowEditorPage() {
             defaultEdgeOptions={defaultEdgeOptions}
             onPaneClick={() => setSelectedNode(null)}
             onNodeDoubleClick={handleNodeDoubleClick}
+            snapToGrid={snapToGrid}
+            snapGrid={[20, 20]}
+            edgesFocusable
+            edgesReconnectable
             fitView
             className={isDark ? 'bg-background' : 'bg-secondary'}
           >
-            <Background
-              variant={BackgroundVariant.Dots}
-              color={isDark ? 'hsl(217 33% 22%)' : 'hsl(214 32% 78%)'}
-              gap={20}
-            />
             <Controls />
+            <LayoutToolbar
+              onAutoLayout={handleAutoLayout}
+              snapToGrid={snapToGrid}
+              onToggleSnap={() => setSnapToGrid((s) => !s)}
+            />
             <MiniMap
               className={isDark ? '!bg-card' : '!bg-card'}
               nodeColor={(node) => {
@@ -207,4 +190,42 @@ export function FlowEditorPage() {
       )}
     </div>
   );
+}
+
+/** Derive implicit edges from navigateTo props inside screen definitions */
+function useImplicitEdges(nodes: any[], edges: any[]) {
+  return useMemo(() => {
+    const result: typeof edges = [];
+    const existingPairs = new Set(edges.map((e: any) => `${e.source}->${e.target}`));
+
+    for (const node of nodes) {
+      const rootComponents =
+        (node.data as any).props?.screenDefinition?.rootComponents;
+      if (!rootComponents) continue;
+
+      const stack = [...rootComponents];
+      while (stack.length > 0) {
+        const comp = stack.pop();
+        if (!comp) continue;
+        const target = comp.props?.navigateTo;
+        if (target && typeof target === 'string' && target !== node.id) {
+          const pairKey = `${node.id}->${target}`;
+          if (!existingPairs.has(pairKey)) {
+            existingPairs.add(pairKey);
+            const label = comp.props?.label || comp.type || '';
+            result.push({
+              id: `implicit_${node.id}_${comp.id}_${target}`,
+              source: node.id,
+              target,
+              type: 'labeled',
+              animated: false,
+              data: { label, implicit: true },
+            } as any);
+          }
+        }
+        if (comp.children) stack.push(...comp.children);
+      }
+    }
+    return result;
+  }, [nodes, edges]);
 }

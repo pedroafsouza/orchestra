@@ -42,7 +42,15 @@ export function PropsEditor({
             onChange={(e) => handleLabelChange(e.target.value)}
           />
         </div>
-        {Object.entries(data.props).map(([key, value]) => (
+        {Object.entries(data.props)
+          .filter(([key, value]) => {
+            // Hide complex/internal props from the generic editor
+            if (key === 'conditions') return false;
+            if (key === 'screenDefinition') return false;
+            if (typeof value === 'object' && value !== null) return false;
+            return true;
+          })
+          .map(([key, value]) => (
           <div key={key}>
             <Label className="text-xs text-muted-foreground">{key}</Label>
             <Input

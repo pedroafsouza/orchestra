@@ -4,7 +4,7 @@ import { TODO_LIST_TEMPLATE } from '@orchestra/shared';
 // Qwen via Alibaba Cloud DashScope (OpenAI-compatible API)
 const client = new OpenAI({
   apiKey: process.env.DASHSCOPE_API_KEY || '',
-  baseURL: process.env.DASHSCOPE_BASE_URL || 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1',
+  baseURL: process.env.DASHSCOPE_BASE_URL || 'https://dashscope-us.aliyuncs.com/compatible-mode/v1',
 });
 
 const SYSTEM_PROMPT = `You are an app generator for Orchestra, a Server-Driven UI platform. Given a user's app description, generate a complete ProjectTemplate JSON object.

@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { requireAuth } from '@/lib/session';
-import { generateTemplate, type ChatMessage } from '@/lib/gemini';
+import { generateTemplate, type ChatMessage } from '@/lib/llm';
 import { ProjectTemplateSchema } from '@orchestra/shared';
 
 const RequestSchema = z.object({
@@ -37,10 +37,10 @@ export async function POST(req: NextRequest) {
       };
 
       try {
-        const qwenStream = await generateTemplate(body.messages as ChatMessage[]);
+        const llmStream = await generateTemplate(body.messages as ChatMessage[]);
         let accumulated = '';
 
-        for await (const chunk of qwenStream) {
+        for await (const chunk of llmStream) {
           const text = chunk.choices[0]?.delta?.content || '';
           if (text) {
             accumulated += text;

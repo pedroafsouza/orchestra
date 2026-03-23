@@ -8,10 +8,11 @@ import {
   SafeAreaView,
   StyleSheet,
   Platform,
+  Dimensions,
 } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import type { ScreenComponent, Breakpoint } from '@orchestra/shared';
-import { evaluateCondition } from '@orchestra/shared';
+import { evaluateCondition, AnalyticsTracker } from '@orchestra/shared';
 import { PreviewRuntime } from '@/components/orchestra/PreviewRuntime';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -92,6 +93,39 @@ export default function PreviewScreen() {
 
   // Context for decision nodes (SET_CONTEXT values accumulate here)
   const contextRef = useRef<Record<string, any>>({});
+
+  // Analytics tracker
+  const trackerRef = useRef<AnalyticsTracker | null>(null);
+
+  // Initialize / destroy tracker with project data
+  useEffect(() => {
+    if (!data) return;
+    const screen = Dimensions.get('window');
+    const tracker = new AnalyticsTracker({
+      endpoint: `${API_BASE}/api/projects/${data.projectId}/analytics/events`,
+      projectId: data.projectId,
+      deviceInfo: {
+        platform: Platform.OS,
+        screenWidth: screen.width,
+        screenHeight: screen.height,
+      },
+    });
+    tracker.track('session_start');
+    trackerRef.current = tracker;
+    return () => {
+      tracker.track('session_end');
+      tracker.destroy();
+      trackerRef.current = null;
+    };
+  }, [data]);
+
+  // Track page views when current node changes
+  useEffect(() => {
+    if (currentNodeId && trackerRef.current) {
+      trackerRef.current.setNodeId(currentNodeId);
+      trackerRef.current.track('page_view', { nodeId: currentNodeId });
+    }
+  }, [currentNodeId]);
 
   // Fetch preview data
   useEffect(() => {
@@ -207,6 +241,12 @@ export default function PreviewScreen() {
         return;
       }
 
+      // Track navigation event
+      trackerRef.current?.track('navigation', {
+        nodeId: currentNodeId ?? undefined,
+        metadata: { sourceNodeId: currentNodeId, targetNodeId: nodeId },
+      });
+
       if (currentNodeId) {
         setNavStack((prev) => [
           ...prev,
@@ -232,6 +272,18 @@ export default function PreviewScreen() {
   const handleAction = useCallback(
     (action: { type: string; payload: any; formValues: Record<string, string> }) => {
       const { type, payload, formValues } = action;
+
+      // Track all actions
+      trackerRef.current?.track(
+        type === 'DATASOURCE_ADD' || type === 'DATASOURCE_UPDATE'
+          ? 'datasource_action'
+          : 'button_click',
+        {
+          nodeId: currentNodeId ?? undefined,
+          componentId: payload?.componentId,
+          metadata: { actionType: type, datasourceId: payload?.datasourceId },
+        },
+      );
 
       switch (type) {
         case 'NAVIGATE': {

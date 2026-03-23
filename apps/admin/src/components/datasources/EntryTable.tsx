@@ -67,7 +67,7 @@ export function EntryTable({
         </TableHeader>
         <TableBody>
           {filteredEntries.map((entry) => (
-            <TableRow key={entry.id}>
+            <TableRow key={entry.id} className="hover:bg-muted/40 transition-colors">
               {fields.map((f) => (
                 <TableCell key={f.key} className="py-2">
                   {readOnly ? (

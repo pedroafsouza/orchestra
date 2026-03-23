@@ -69,12 +69,18 @@ const renderCombobox: ComponentRenderer = (component, ctx) => {
 
 const renderCheckbox: ComponentRenderer = (component, ctx) => {
   const { props } = component;
-  const isChecked = ctx.checkedValues[component.id] ?? props.checked ?? false;
+  // Use a composite key (componentId + entry id) so each list row has independent state
+  const entryId = ctx.entry?._id ?? ctx.entry?.id;
+  const stateKey = entryId ? `${component.id}_${entryId}` : component.id;
+  const mappedChecked = ctx.entry && component.datasource?.fieldMappings?.checked
+    ? ctx.entry[component.datasource.fieldMappings.checked]
+    : undefined;
+  const isChecked = ctx.checkedValues[stateKey] ?? mappedChecked ?? props.checked ?? false;
   return (
     <TouchableOpacity
       activeOpacity={0.7}
       onPress={() => {
-        ctx.onCheckedChange(component.id, !isChecked);
+        ctx.onCheckedChange(stateKey, !isChecked);
         if (component.actions) {
           for (const action of component.actions) {
             ctx.onAction({
@@ -97,13 +103,18 @@ const renderCheckbox: ComponentRenderer = (component, ctx) => {
 
 const renderSwitch: ComponentRenderer = (component, ctx) => {
   const { props } = component;
-  const isOn = ctx.checkedValues[component.id] ?? props.checked ?? false;
+  const entryId = ctx.entry?._id ?? ctx.entry?.id;
+  const stateKey = entryId ? `${component.id}_${entryId}` : component.id;
+  const mappedChecked = ctx.entry && component.datasource?.fieldMappings?.checked
+    ? ctx.entry[component.datasource.fieldMappings.checked]
+    : undefined;
+  const isOn = ctx.checkedValues[stateKey] ?? mappedChecked ?? props.checked ?? false;
   return (
     <View style={[s.switchRow, ctx.resolvedStyle as ViewStyle]}>
       <Switch
         value={isOn}
         onValueChange={(val) => {
-          ctx.onCheckedChange(component.id, val);
+          ctx.onCheckedChange(stateKey, val);
           if (component.actions) {
             for (const action of component.actions) {
               ctx.onAction({

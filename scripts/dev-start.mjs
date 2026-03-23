@@ -71,8 +71,54 @@ function httpCheck(url, timeout = 5000) {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+function killAll() {
+  log("Stopping all Orchestra services...");
+
+  for (const [port, name] of [[3001, "API"], [5173, "Admin"], [8081, "Expo"]]) {
+    const pids = run(`lsof -ti:${port}`);
+    if (pids) {
+      run(`kill -9 ${pids.split("\n").join(" ")}`);
+      log(`${name} (port ${port}) .... stopped`);
+    } else {
+      log(`${name} (port ${port}) .... not running`);
+    }
+  }
+
+  console.log();
+  log("All services stopped.");
+}
+
+function destroyDatabase() {
+  log("Destroying MongoDB...");
+
+  if (containerRunning("orchestra-db")) {
+    run("docker rm -f orchestra-db");
+    log("MongoDB container ..... removed");
+  } else {
+    log("MongoDB container ..... not running");
+  }
+
+  // Remove the volume to wipe all data
+  run("docker volume rm mongodata 2>/dev/null");
+  log("MongoDB data ......... deleted");
+
+  console.log();
+  log("Database destroyed.");
+}
+
 async function main() {
   process.chdir(ROOT);
+
+  // Handle flags
+  if (process.argv.includes("--kill") || process.argv.includes("--stop")) {
+    killAll();
+    return;
+  }
+
+  if (process.argv.includes("--destroy-db")) {
+    destroyDatabase();
+    return;
+  }
 
   // ---------- MongoDB ----------
   if (containerRunning("orchestra-db")) {

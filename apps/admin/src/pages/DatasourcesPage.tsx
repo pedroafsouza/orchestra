@@ -84,7 +84,7 @@ export function DatasourcesPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <header className="h-14 border-b flex items-center justify-between px-6 bg-card">
+      <header className="h-14 border-b flex items-center justify-between px-6 bg-card/80 backdrop-blur-md sticky top-0 z-50">
         <div className="flex items-center gap-3">
           <Button
             variant="ghost"

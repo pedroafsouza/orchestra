@@ -18,6 +18,7 @@ import {
   Clock,
   Copy,
   BarChart3,
+  ImageIcon,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -235,6 +236,13 @@ export function ProjectDashboardPage() {
       title: 'Datasources',
       desc: 'Manage collections and content',
       onClick: () => navigate(`/project/${projectId}/datasources`),
+    },
+    {
+      icon: ImageIcon,
+      iconBg: 'bg-orange-500/10 text-orange-600 dark:text-orange-400',
+      title: 'Resources',
+      desc: 'Upload and manage images, videos, and files',
+      onClick: () => navigate(`/project/${projectId}/resources`),
     },
     {
       icon: Play,

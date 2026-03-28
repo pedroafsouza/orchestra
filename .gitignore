@@ -13,3 +13,4 @@ mcp-configs/
 .mcp.json
 out/
 next-env.d.ts
+uploads/

@@ -8,6 +8,7 @@ import { SettingsPage } from '@/features/settings/SettingsPage';
 import { PreviewPage } from '@/features/preview/PreviewPage';
 import { AIStudioPage } from '@/features/ai-studio/AIStudioPage';
 import { AnalyticsPage } from '@/features/analytics/AnalyticsPage';
+import { ResourcesPage } from '@/features/resources/ResourcesPage';
 import { useThemeStore } from '@/store/themeStore';
 import { Toaster } from '@/components/ui/toaster';
 import { KeyboardShortcuts } from '@/components/KeyboardShortcuts';
@@ -37,6 +38,7 @@ export default function App() {
           <Route path="/project/:projectId/datasources" element={<DatasourcesPage />} />
           <Route path="/project/:projectId/settings" element={<SettingsPage />} />
           <Route path="/project/:projectId/analytics" element={<AnalyticsPage />} />
+          <Route path="/project/:projectId/resources" element={<ResourcesPage />} />
           <Route path="/project/:projectId/preview" element={<PreviewPage />} />
         </Routes>
       </BrowserRouter>

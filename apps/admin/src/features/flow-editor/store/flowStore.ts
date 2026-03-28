@@ -44,7 +44,7 @@ interface FlowState {
   onNodesChange: OnNodesChange;
   onEdgesChange: OnEdgesChange;
   onConnect: OnConnect;
-  addNode: (type: NodeType, position: { x: number; y: number }) => void;
+  addNode: (type: NodeType, position: { x: number; y: number }, initialData?: Partial<OrchestraNodeData>) => void;
   deleteNode: (id: string) => void;
   setSelectedNode: (id: string | null) => void;
   updateNodeData: (id: string, data: Partial<OrchestraNodeData>) => void;
@@ -183,7 +183,7 @@ export const useFlowStore = create<FlowState>((set, get) => ({
     markDirty(set);
   },
 
-  addNode: (type, position) => {
+  addNode: (type, position, initialData) => {
     pushHistory(get());
     const id = `node_${++nodeIdCounter}`;
     const { nodes, selectedNodeId } = get();
@@ -226,10 +226,11 @@ export const useFlowStore = create<FlowState>((set, get) => ({
       type: type === 'decision' ? 'decision' : 'orchestra',
       position: { x, y },
       data: {
-        label: type === 'decision' ? 'Decision' : `${type} node`,
+        label: initialData?.label || (type === 'decision' ? 'Decision' : `${type} node`),
         nodeType: type,
-        props: type === 'decision' ? { conditions: [] } : {},
-        actions: [],
+        props: initialData?.props || (type === 'decision' ? { conditions: [] } : {}),
+        actions: initialData?.actions || [],
+        ...initialData,
       },
     };
     set({ nodes: [...nodes, newNode], selectedNodeId: id });

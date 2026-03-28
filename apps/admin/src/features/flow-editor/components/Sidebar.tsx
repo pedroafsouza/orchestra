@@ -6,7 +6,7 @@ import { NodePalette } from './NodePalette';
 import { PropsEditor } from './PropsEditor';
 import { ActionsEditor } from './ActionsEditor';
 import { DecisionEditor } from './DecisionEditor';
-import { ChevronRight, ChevronLeft } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 function CollapsedSidebar({ onExpand }: { onExpand: () => void }) {
@@ -54,16 +54,33 @@ function NodeEditor({
   nodeId: string;
   data: OrchestraNodeData;
 }) {
+  const deleteNode = useFlowStore((s) => s.deleteNode);
+
   return (
     <>
       <Separator className="mb-4" />
-      <div className="mb-4">
-        <h2 className="text-sm font-semibold text-foreground">
-          {data.label}
-        </h2>
-        <p className="text-[10px] text-muted-foreground capitalize">
-          {data.nodeType?.replace('_', ' ')} node
-        </p>
+      <div className="mb-4 flex items-start justify-between">
+        <div>
+          <h2 className="text-sm font-semibold text-foreground">
+            {data.label}
+          </h2>
+          <p className="text-[10px] text-muted-foreground capitalize">
+            {data.nodeType?.replace('_', ' ')} node
+          </p>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+          onClick={() => {
+            if (confirm(`Delete "${data.label}"? Connected edges will be removed.`)) {
+              deleteNode(nodeId);
+            }
+          }}
+          title="Delete node"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </Button>
       </div>
       <PropsEditor nodeId={nodeId} data={data} />
       {data.nodeType === 'decision' && (

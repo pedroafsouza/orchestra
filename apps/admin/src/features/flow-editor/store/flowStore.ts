@@ -44,6 +44,7 @@ interface FlowState {
   onEdgesChange: OnEdgesChange;
   onConnect: OnConnect;
   addNode: (type: NodeType, position: { x: number; y: number }) => void;
+  deleteNode: (id: string) => void;
   setSelectedNode: (id: string | null) => void;
   updateNodeData: (id: string, data: Partial<OrchestraNodeData>) => void;
   setFlowName: (name: string) => void;
@@ -75,6 +76,20 @@ function pushHistory(state: FlowState) {
   });
   if (undoStack.length > MAX_HISTORY) undoStack.shift();
   redoStack = [];
+}
+
+/** Recursively clear navigateTo references to a deleted node in component trees */
+function clearNavigateToRefs(components: any[], deletedId: string): any[] {
+  return components.map((c) => {
+    const updated = { ...c };
+    if (updated.props?.navigateTo === deletedId) {
+      updated.props = { ...updated.props, navigateTo: '' };
+    }
+    if (updated.children?.length) {
+      updated.children = clearNavigateToRefs(updated.children, deletedId);
+    }
+    return updated;
+  });
 }
 
 function scheduleSave(state: FlowState) {
@@ -217,6 +232,53 @@ export const useFlowStore = create<FlowState>((set, get) => ({
       },
     };
     set({ nodes: [...nodes, newNode], selectedNodeId: id });
+    scheduleSave(get());
+  },
+
+  deleteNode: (id: string) => {
+    pushHistory(get());
+    const { nodes, edges, selectedNodeId } = get();
+
+    // Remove the node itself
+    const newNodes = nodes
+      .filter((n) => n.id !== id)
+      .map((n) => {
+        // Clear navigateTo references pointing to the deleted node in screen definitions
+        const screenDef = n.data.props?.screenDefinition;
+        if (screenDef?.rootComponents) {
+          const cleanedComponents = clearNavigateToRefs(screenDef.rootComponents, id);
+          return {
+            ...n,
+            data: {
+              ...n.data,
+              props: {
+                ...n.data.props,
+                screenDefinition: { ...screenDef, rootComponents: cleanedComponents },
+              },
+            },
+          };
+        }
+        // Clear NAVIGATE action payloads referencing the deleted node
+        if (n.data.actions?.length) {
+          const cleanedActions = n.data.actions.map((action) => {
+            if (action.type === 'NAVIGATE' && action.payload?.targetNodeId === id) {
+              return { ...action, payload: { ...action.payload, targetNodeId: '' } };
+            }
+            return action;
+          });
+          return { ...n, data: { ...n.data, actions: cleanedActions } };
+        }
+        return n;
+      });
+
+    // Remove all edges connected to the deleted node
+    const newEdges = edges.filter((e) => e.source !== id && e.target !== id);
+
+    set({
+      nodes: newNodes,
+      edges: newEdges,
+      selectedNodeId: selectedNodeId === id ? null : selectedNodeId,
+    });
     scheduleSave(get());
   },
 

@@ -50,6 +50,8 @@ function FlowEditorInner() {
   const undo = useFlowStore((s) => s.undo);
   const redo = useFlowStore((s) => s.redo);
   const autoLayout = useFlowStore((s) => s.autoLayout);
+  const deleteNode = useFlowStore((s) => s.deleteNode);
+  const selectedNodeId = useFlowStore((s) => s.selectedNodeId);
 
   const [screenBuilderNodeId, setScreenBuilderNodeId] = useState<string | null>(null);
   const [snapToGrid, setSnapToGrid] = useState(true);
@@ -69,6 +71,10 @@ function FlowEditorInner() {
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      // Don't handle keys when typing in inputs
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
       if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
         e.preventDefault();
         if (e.shiftKey) {
@@ -77,10 +83,15 @@ function FlowEditorInner() {
           undo();
         }
       }
+      // Delete selected node with Delete or Backspace
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedNodeId) {
+        e.preventDefault();
+        deleteNode(selectedNodeId);
+      }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [undo, redo]);
+  }, [undo, redo, deleteNode, selectedNodeId]);
 
   const handleNodeDoubleClick = (_event: React.MouseEvent, node: any) => {
     setScreenBuilderNodeId(node.id);

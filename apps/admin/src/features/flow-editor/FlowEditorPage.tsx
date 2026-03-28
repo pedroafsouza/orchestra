@@ -52,6 +52,7 @@ function FlowEditorInner() {
   const autoLayout = useFlowStore((s) => s.autoLayout);
   const deleteNode = useFlowStore((s) => s.deleteNode);
   const selectedNodeId = useFlowStore((s) => s.selectedNodeId);
+  const saveDiagram = useFlowStore((s) => s.saveDiagram);
 
   const [screenBuilderNodeId, setScreenBuilderNodeId] = useState<string | null>(null);
   const [snapToGrid, setSnapToGrid] = useState(true);
@@ -71,7 +72,14 @@ function FlowEditorInner() {
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      // Don't handle keys when typing in inputs
+      // Ctrl/Cmd+S — save (works even in inputs)
+      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+        e.preventDefault();
+        saveDiagram();
+        return;
+      }
+
+      // Don't handle other keys when typing in inputs
       const tag = (e.target as HTMLElement)?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
 
@@ -91,7 +99,7 @@ function FlowEditorInner() {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [undo, redo, deleteNode, selectedNodeId]);
+  }, [undo, redo, deleteNode, selectedNodeId, saveDiagram]);
 
   const handleNodeDoubleClick = (_event: React.MouseEvent, node: any) => {
     setScreenBuilderNodeId(node.id);

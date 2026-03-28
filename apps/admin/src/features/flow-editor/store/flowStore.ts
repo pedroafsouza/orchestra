@@ -39,6 +39,7 @@ interface FlowState {
   flowName: string;
   projectId: string | null;
   loaded: boolean;
+  isDirty: boolean;
 
   onNodesChange: OnNodesChange;
   onEdgesChange: OnEdgesChange;
@@ -50,7 +51,7 @@ interface FlowState {
   setFlowName: (name: string) => void;
   getExportJSON: () => any;
   loadDiagram: (projectId: string) => Promise<void>;
-  saveDiagram: () => void;
+  saveDiagram: () => Promise<void>;
   autoLayout: (direction: LayoutDirection) => void;
   undo: () => void;
   redo: () => void;
@@ -59,7 +60,6 @@ interface FlowState {
 }
 
 let nodeIdCounter = 0;
-let saveTimer: ReturnType<typeof setTimeout> | null = null;
 
 // Undo/redo history
 const MAX_HISTORY = 50;
@@ -92,17 +92,8 @@ function clearNavigateToRefs(components: any[], deletedId: string): any[] {
   });
 }
 
-function scheduleSave(state: FlowState) {
-  if (!state.projectId) return;
-  if (saveTimer) clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => {
-    const { nodes, edges, flowName, projectId } = state;
-    if (!projectId) return;
-    api(`/api/projects/${projectId}/diagram`, {
-      method: 'PUT',
-      body: { nodes, edges, flowName },
-    }).catch((err) => console.warn('[auto-save] failed:', err));
-  }, 1000);
+function markDirty(set: (partial: Partial<FlowState>) => void) {
+  set({ isDirty: true });
 }
 
 export const useFlowStore = create<FlowState>((set, get) => ({
@@ -112,6 +103,7 @@ export const useFlowStore = create<FlowState>((set, get) => ({
   flowName: 'Untitled Flow',
   projectId: null,
   loaded: false,
+  isDirty: false,
 
   loadDiagram: async (projectId: string) => {
     set({ projectId, loaded: false });
@@ -130,30 +122,39 @@ export const useFlowStore = create<FlowState>((set, get) => ({
           edges: data.edges || [],
           flowName: data.flowName || 'Untitled Flow',
           loaded: true,
+          isDirty: false,
         });
       } else {
-        set({ nodes: [], edges: [], flowName: 'Untitled Flow', loaded: true });
+        set({ nodes: [], edges: [], flowName: 'Untitled Flow', loaded: true, isDirty: false });
       }
     } catch {
       set({ loaded: true });
     }
   },
 
-  saveDiagram: () => scheduleSave(get()),
+  saveDiagram: async () => {
+    const { nodes, edges, flowName, projectId } = get();
+    if (!projectId) return;
+    await api(`/api/projects/${projectId}/diagram`, {
+      method: 'PUT',
+      body: { nodes, edges, flowName },
+    });
+    set({ isDirty: false });
+  },
 
   onNodesChange: (changes) => {
     // Only push history for significant changes (add/remove), not position drags
     const hasStructuralChange = changes.some((c) => c.type === 'remove' || c.type === 'add');
     if (hasStructuralChange) pushHistory(get());
     set({ nodes: applyNodeChanges(changes, get().nodes) as Node<OrchestraNodeData>[] });
-    scheduleSave(get());
+    markDirty(set);
   },
 
   onEdgesChange: (changes) => {
     const hasStructuralChange = changes.some((c) => c.type === 'remove' || c.type === 'add');
     if (hasStructuralChange) pushHistory(get());
     set({ edges: applyEdgeChanges(changes, get().edges) });
-    scheduleSave(get());
+    markDirty(set);
   },
 
   onConnect: (connection) => {
@@ -179,7 +180,7 @@ export const useFlowStore = create<FlowState>((set, get) => ({
       data: edgeData,
     };
     set({ edges: addEdge(edge, get().edges) });
-    scheduleSave(get());
+    markDirty(set);
   },
 
   addNode: (type, position) => {
@@ -232,7 +233,7 @@ export const useFlowStore = create<FlowState>((set, get) => ({
       },
     };
     set({ nodes: [...nodes, newNode], selectedNodeId: id });
-    scheduleSave(get());
+    markDirty(set);
   },
 
   deleteNode: (id: string) => {
@@ -279,7 +280,7 @@ export const useFlowStore = create<FlowState>((set, get) => ({
       edges: newEdges,
       selectedNodeId: selectedNodeId === id ? null : selectedNodeId,
     });
-    scheduleSave(get());
+    markDirty(set);
   },
 
   setSelectedNode: (id) => set({ selectedNodeId: id }),
@@ -292,12 +293,12 @@ export const useFlowStore = create<FlowState>((set, get) => ({
           : node
       ),
     });
-    scheduleSave(get());
+    markDirty(set);
   },
 
   setFlowName: (name) => {
     set({ flowName: name });
-    scheduleSave(get());
+    markDirty(set);
   },
 
   getExportJSON: () => {
@@ -351,7 +352,7 @@ export const useFlowStore = create<FlowState>((set, get) => ({
       };
     });
     set({ nodes: laid as Node<OrchestraNodeData>[] });
-    scheduleSave(get());
+    markDirty(set);
   },
 
   undo: () => {
@@ -366,7 +367,7 @@ export const useFlowStore = create<FlowState>((set, get) => ({
     isUndoRedo = true;
     set({ nodes: prev.nodes, edges: prev.edges, flowName: prev.flowName });
     isUndoRedo = false;
-    scheduleSave(get());
+    markDirty(set);
   },
 
   redo: () => {
@@ -381,7 +382,7 @@ export const useFlowStore = create<FlowState>((set, get) => ({
     isUndoRedo = true;
     set({ nodes: next.nodes, edges: next.edges, flowName: next.flowName });
     isUndoRedo = false;
-    scheduleSave(get());
+    markDirty(set);
   },
 
   canUndo: () => undoStack.length > 0,

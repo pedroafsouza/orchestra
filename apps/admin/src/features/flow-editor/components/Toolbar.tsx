@@ -3,7 +3,7 @@ import { useFlowStore } from '../store/flowStore';
 import { OrchestraFlowSchema } from '@orchestra/shared';
 import { api } from '@/lib/api';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { ArrowLeft, Download, Rocket, Play, Loader2 } from 'lucide-react';
+import { ArrowLeft, Download, Rocket, Play, Loader2, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
@@ -18,11 +18,26 @@ export function Toolbar({ projectId, onBack }: ToolbarProps) {
   const flowName = useFlowStore((s) => s.flowName);
   const setFlowName = useFlowStore((s) => s.setFlowName);
   const getExportJSON = useFlowStore((s) => s.getExportJSON);
+  const saveDiagram = useFlowStore((s) => s.saveDiagram);
+  const isDirty = useFlowStore((s) => s.isDirty);
   const nodes = useFlowStore((s) => s.nodes);
   const edges = useFlowStore((s) => s.edges);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [deploying, setDeploying] = useState(false);
+  const [saving, setSaving] = useState(false);
   const { toast } = useToast();
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await saveDiagram();
+      toast({ title: 'Saved', description: 'Flow saved successfully.', variant: 'success' });
+    } catch {
+      toast({ title: 'Save failed', description: 'Could not save the flow.', variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleExport = () => {
     const json = getExportJSON();
@@ -144,6 +159,16 @@ export function Toolbar({ projectId, onBack }: ToolbarProps) {
       </div>
       <div className="flex items-center gap-2">
         <ThemeToggle />
+        <Button
+          variant={isDirty ? 'default' : 'secondary'}
+          size="sm"
+          onClick={handleSave}
+          disabled={saving || !isDirty}
+          className="gap-1.5"
+        >
+          {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+          {isDirty ? 'Save' : 'Saved'}
+        </Button>
         <Button
           variant="outline"
           size="sm"

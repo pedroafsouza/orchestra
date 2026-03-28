@@ -4,7 +4,6 @@ import {
   ReactFlowProvider,
   Controls,
   MiniMap,
-  MarkerType,
   useReactFlow,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
@@ -12,8 +11,8 @@ import { useFlowStore, type LayoutDirection } from '@/store/flowStore';
 import { useThemeStore } from '@/store/themeStore';
 import { useProjectStore } from '@/store/projectStore';
 import { OrchestraNode, getNodeColor } from '@/components/OrchestraNode';
-import { DecisionNode } from '@/components/DecisionNode';
-import { LabeledEdge } from '@/components/LabeledEdge';
+import { DecisionNode, getConditionColor } from '@/components/DecisionNode';
+import { LabeledEdge, MARKER_EXPLICIT, MARKER_CONDITION, MARKER_IMPLICIT } from '@/components/LabeledEdge';
 import { Sidebar } from '@/components/Sidebar';
 import { Toolbar } from '@/components/Toolbar';
 import { LayoutToolbar } from '@/components/flow/LayoutToolbar';
@@ -88,23 +87,13 @@ function FlowEditorInner() {
   };
 
   const isDark = theme === 'dark';
-  const edgeColor = isDark ? 'hsl(215 20% 45%)' : 'hsl(215 16% 70%)';
 
   const defaultEdgeOptions = useMemo(() => ({
     type: 'labeled',
     animated: false,
-    style: {
-      stroke: edgeColor,
-      strokeWidth: 1.5,
-      strokeDasharray: '6 4',
-    },
-    markerEnd: {
-      type: MarkerType.ArrowClosed,
-      color: edgeColor,
-      width: 16,
-      height: 16,
-    },
-  }), [edgeColor]);
+    style: {},
+    markerEnd: undefined,
+  }), []);
 
   const implicitEdges = useImplicitEdges(nodes, edges);
 
@@ -118,24 +107,14 @@ function FlowEditorInner() {
         animated: false,
         selectable: !isImplicit,
         deletable: !isImplicit,
-        style: {
-          stroke: edgeColor,
-          strokeWidth: 1.5,
-          strokeDasharray: '6 4',
-          ...((e as any).style || {}),
-        },
-        markerEnd: (e as any).markerEnd || {
-          type: MarkerType.ArrowClosed,
-          color: edgeColor,
-          width: 16,
-          height: 16,
-        },
+        // Styling is handled entirely inside LabeledEdge based on tier
+        style: {},
         data: {
           ...((e as any).data || {}),
         },
       };
     });
-  }, [edges, implicitEdges, edgeColor]);
+  }, [edges, implicitEdges]);
 
   return (
     <div className="h-screen flex flex-col bg-secondary">
@@ -163,6 +142,7 @@ function FlowEditorInner() {
             fitView
             className={isDark ? 'bg-background' : 'bg-secondary'}
           >
+            <EdgeMarkerDefs />
             <Controls />
             <LayoutToolbar
               onAutoLayout={handleAutoLayout}
@@ -189,6 +169,73 @@ function FlowEditorInner() {
         />
       )}
     </div>
+  );
+}
+
+/**
+ * SVG marker definitions for the three edge tiers.
+ * Rendered inside ReactFlow so markers are available in the same SVG context.
+ */
+function EdgeMarkerDefs() {
+  // 6 condition colors from DecisionNode
+  const conditionCount = 6;
+
+  return (
+    <svg style={{ position: 'absolute', width: 0, height: 0 }}>
+      <defs>
+        {/* Explicit edge arrow: 20x20 filled triangle, primary color */}
+        <marker
+          id={MARKER_EXPLICIT}
+          viewBox="0 0 20 20"
+          refX={18}
+          refY={10}
+          markerWidth={20}
+          markerHeight={20}
+          orient="auto-start-reverse"
+          markerUnits="userSpaceOnUse"
+        >
+          <path d="M 2 4 L 18 10 L 2 16 Z" fill="hsl(var(--primary))" />
+        </marker>
+
+        {/* Condition edge arrows: 20x20 filled, one per condition color */}
+        {Array.from({ length: conditionCount }).map((_, i) => (
+          <marker
+            key={`cond-${i}`}
+            id={MARKER_CONDITION(i)}
+            viewBox="0 0 20 20"
+            refX={18}
+            refY={10}
+            markerWidth={20}
+            markerHeight={20}
+            orient="auto-start-reverse"
+            markerUnits="userSpaceOnUse"
+          >
+            <path d="M 2 4 L 18 10 L 2 16 Z" fill={getConditionColor(i)} />
+          </marker>
+        ))}
+
+        {/* Implicit edge arrow: 14x14 open (unfilled) triangle, muted */}
+        <marker
+          id={MARKER_IMPLICIT}
+          viewBox="0 0 14 14"
+          refX={12}
+          refY={7}
+          markerWidth={14}
+          markerHeight={14}
+          orient="auto-start-reverse"
+          markerUnits="userSpaceOnUse"
+        >
+          <path
+            d="M 2 3 L 12 7 L 2 11"
+            fill="none"
+            stroke="hsl(var(--muted-foreground) / 0.4)"
+            strokeWidth={1.5}
+            strokeLinejoin="round"
+            strokeLinecap="round"
+          />
+        </marker>
+      </defs>
+    </svg>
   );
 }
 

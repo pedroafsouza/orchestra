@@ -459,9 +459,9 @@ export function RestConfigForm({
                   </span>
                 </div>
                 <p className="text-muted-foreground">
-                  HTTP {testResult.statusCode} &middot;{' '}
-                  {testResult.responseTime}ms &middot;{' '}
-                  {testResult.totalItems} items found &middot;{' '}
+                  HTTP {testResult.statusCode} {'\u00B7'}{' '}
+                  {testResult.responseTime}ms {'\u00B7'}{' '}
+                  {testResult.totalItems} items found {'\u00B7'}{' '}
                   {testResult.detectedFields.length} fields detected
                 </p>
               </div>

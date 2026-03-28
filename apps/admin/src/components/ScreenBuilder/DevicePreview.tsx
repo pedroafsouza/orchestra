@@ -150,8 +150,8 @@ export function DevicePreview() {
       </div>
 
       <p className="text-[10px] text-muted-foreground mt-1 shrink-0">
-        {frame.name} &middot; {frame.width} &times; {frame.height}
-        {scale < 1 && ` &middot; ${Math.round(scale * 100)}%`}
+        {frame.name} {'\u00B7'} {frame.width} {'\u00D7'} {frame.height}
+        {scale < 1 && ` \u00B7 ${Math.round(scale * 100)}%`}
       </p>
     </div>
   );

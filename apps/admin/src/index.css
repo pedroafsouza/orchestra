@@ -94,6 +94,20 @@
   background: hsl(var(--card)) !important;
 }
 
+/* Animated flow direction for explicit edges */
+@keyframes orchestra-edge-flow {
+  from {
+    stroke-dashoffset: 28;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.orchestra-edge-flow-anim {
+  animation: orchestra-edge-flow 1.2s linear infinite;
+}
+
 /* Thin, subtle scrollbar for the device preview phone frame */
 .device-scrollbar::-webkit-scrollbar {
   width: 3px;

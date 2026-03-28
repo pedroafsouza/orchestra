@@ -127,6 +127,23 @@ export default function PreviewScreen() {
     }
   }, [currentNodeId]);
 
+  // Listen for postMessage from admin preview sidebar (web only)
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+    const handler = (event: MessageEvent) => {
+      if (event.data?.type === 'ORCHESTRA_NAVIGATE_TO_NODE') {
+        const nodeId = event.data.nodeId;
+        if (nodeId) {
+          setCurrentNodeId(nodeId);
+          setNavigationContext(undefined);
+          setNavStack([]);
+        }
+      }
+    };
+    window.addEventListener('message', handler);
+    return () => window.removeEventListener('message', handler);
+  }, []);
+
   // Fetch preview data
   useEffect(() => {
     if (!guid) return;

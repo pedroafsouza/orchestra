@@ -26,6 +26,15 @@ export function PreviewPage() {
   const [breakpoint, setBreakpoint] = useState<Breakpoint>('phone');
   const [loading, setLoading] = useState(true);
   const [iframeKey, setIframeKey] = useState(0);
+  const [activeNodeId, setActiveNodeId] = useState<string | null>(null);
+
+  const navigateToNode = useCallback((nodeId: string) => {
+    setActiveNodeId(nodeId);
+    iframeRef.current?.contentWindow?.postMessage(
+      { type: 'ORCHESTRA_NAVIGATE_TO_NODE', nodeId },
+      '*'
+    );
+  }, []);
 
   useEffect(() => {
     if (!projectId) return;
@@ -42,6 +51,9 @@ export function PreviewPage() {
         setProjectName(project.name);
         setProjectGuid(project.guid);
         setNodes(diagram.nodes || []);
+        if (diagram.nodes?.length > 0) {
+          setActiveNodeId(diagram.nodes[0].id);
+        }
       } catch (err) {
         console.error('[PreviewPage] failed to load:', err);
       } finally {
@@ -132,15 +144,18 @@ export function PreviewPage() {
             Screens
           </p>
           {nodes.map((node) => (
-            <div
+            <button
               key={node.id}
+              onClick={() => navigateToNode(node.id)}
               className={cn(
-                'w-full text-left text-sm px-3 py-2 rounded-md mb-1',
-                'text-foreground'
+                'w-full text-left text-sm px-3 py-2 rounded-md mb-1 transition-colors cursor-pointer',
+                activeNodeId === node.id
+                  ? 'bg-primary/10 text-primary font-medium'
+                  : 'text-foreground hover:bg-muted'
               )}
             >
               {node.data.label}
-            </div>
+            </button>
           ))}
         </aside>
 

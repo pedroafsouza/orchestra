@@ -4,9 +4,10 @@ import { cn } from '@/lib/utils';
 interface TopScreensProps {
   screens: { nodeId: string; count: number }[];
   components: { componentId: string; eventType: string; count: number }[];
+  nodeLabels?: Record<string, string>;
 }
 
-export function TopScreens({ screens, components }: TopScreensProps) {
+export function TopScreens({ screens, components, nodeLabels = {} }: TopScreensProps) {
   const maxScreenCount = screens[0]?.count || 1;
   const maxCompCount = components[0]?.count || 1;
 
@@ -24,8 +25,8 @@ export function TopScreens({ screens, components }: TopScreensProps) {
               {screens.map((s, i) => (
                 <div key={s.nodeId} className="space-y-1">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-foreground font-medium truncate">
-                      {s.nodeId}
+                    <span className="text-foreground font-medium truncate" title={s.nodeId}>
+                      {nodeLabels[s.nodeId] || s.nodeId}
                     </span>
                     <span className="text-muted-foreground ml-2 shrink-0">
                       {s.count}

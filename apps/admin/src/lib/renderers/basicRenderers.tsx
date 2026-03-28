@@ -1,10 +1,17 @@
 import { interpolate, resolveProp } from '@orchestra/shared';
 import type { ComponentRenderer } from './types';
 
+/** Show {{var}} as readable placeholder when no data entry is available */
+function previewInterpolate(text: string, entry: Record<string, any> | undefined): string {
+  if (entry) return interpolate(text, entry);
+  // No entry: convert {{varName}} → [varName] so designers see what will be populated
+  return text.replace(/\{\{(\w+)\}\}/g, (_, key) => `[${key}]`);
+}
+
 const renderText: ComponentRenderer = (component, ctx) => {
   let content = resolveProp('content', component, ctx.entry);
-  if (typeof content === 'string' && ctx.entry) {
-    content = interpolate(content, ctx.entry);
+  if (typeof content === 'string') {
+    content = previewInterpolate(content, ctx.entry);
   }
   return (
     <p
@@ -65,8 +72,8 @@ const renderButton: ComponentRenderer = (component, ctx) => {
 const renderImage: ComponentRenderer = (component, ctx) => {
   const { props } = component;
   let src = resolveProp('src', component, ctx.entry);
-  if (typeof src === 'string' && ctx.entry) {
-    src = interpolate(src, ctx.entry);
+  if (typeof src === 'string') {
+    src = previewInterpolate(src, ctx.entry);
   }
   // Fallback: try common image field names from entry
   if (!src && ctx.entry) {

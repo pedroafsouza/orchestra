@@ -11,6 +11,8 @@ import { EventsByType } from '@/components/analytics/EventsByType';
 import { TopScreens } from '@/components/analytics/TopScreens';
 import { NavigationFlow } from '@/components/analytics/NavigationFlow';
 import type { AnalyticsSummary } from '@orchestra/shared';
+import type { OrchestraNodeData } from '@/store/flowStore';
+import type { Node } from '@xyflow/react';
 
 const PERIOD_OPTIONS = [
   { label: '7d', days: 7 },
@@ -26,6 +28,7 @@ export function AnalyticsPage() {
   const [data, setData] = useState<AnalyticsSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [days, setDays] = useState(30);
+  const [nodeLabels, setNodeLabels] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!projectId) return;
@@ -34,6 +37,16 @@ export function AnalyticsPage() {
         .then(setCurrentProject)
         .catch(() => navigate('/'));
     }
+    // Load diagram to build nodeId → label map
+    api<{ nodes: Node<OrchestraNodeData>[] }>(`/api/projects/${projectId}/diagram`)
+      .then((diagram) => {
+        const labels: Record<string, string> = {};
+        for (const node of diagram.nodes || []) {
+          labels[node.id] = node.data.label || node.id;
+        }
+        setNodeLabels(labels);
+      })
+      .catch(() => {});
   }, [projectId]);
 
   useEffect(() => {
@@ -119,11 +132,12 @@ export function AnalyticsPage() {
             <EventTimeline data={data.eventsByDay} />
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <EventsByType data={data.eventsByType} />
-              <NavigationFlow paths={data.navigationPaths} />
+              <NavigationFlow paths={data.navigationPaths} nodeLabels={nodeLabels} />
             </div>
             <TopScreens
               screens={data.topScreens}
               components={data.topComponents}
+              nodeLabels={nodeLabels}
             />
           </>
         ) : (

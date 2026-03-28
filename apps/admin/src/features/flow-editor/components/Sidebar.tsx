@@ -2,11 +2,22 @@ import { useFlowStore, type OrchestraNodeData } from '../store/flowStore';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { NodePalette } from './NodePalette';
 import { PropsEditor } from './PropsEditor';
 import { ActionsEditor } from './ActionsEditor';
 import { DecisionEditor } from './DecisionEditor';
-import { ChevronRight, ChevronLeft, Trash2 } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Trash2, AlertTriangle } from 'lucide-react';
 import { useState } from 'react';
 
 function CollapsedSidebar({ onExpand }: { onExpand: () => void }) {
@@ -68,19 +79,41 @@ function NodeEditor({
             {data.nodeType?.replace('_', ' ')} node
           </p>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-          onClick={() => {
-            if (confirm(`Delete "${data.label}"? Connected edges will be removed.`)) {
-              deleteNode(nodeId);
-            }
-          }}
-          title="Delete node"
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-        </Button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+              title="Delete node"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent className="max-w-sm">
+            <AlertDialogHeader>
+              <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
+                <AlertTriangle className="h-6 w-6 text-destructive" />
+              </div>
+              <AlertDialogTitle className="text-center">
+                Delete &ldquo;{data.label}&rdquo;?
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-center">
+                This will permanently remove this screen and all connected
+                edges. Any navigation references to this node will be cleared.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="sm:justify-center gap-2">
+              <AlertDialogCancel className="mt-0">Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={() => deleteNode(nodeId)}
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
       <PropsEditor nodeId={nodeId} data={data} />
       {data.nodeType === 'decision' && (
